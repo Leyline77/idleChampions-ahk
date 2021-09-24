@@ -71,7 +71,7 @@ Gui 1:Show
 Update:
 Gui, Submit, NoHide
 
-    	
+
 if ( AutoLevel = 1 ) {
     SetTimer, HeroLevel, %Rate%
 }
@@ -112,7 +112,7 @@ AutoFormation:
 	{
 		SendControlKey("e")
 	}
-return	
+return
 
 AutoProg:
     ControlFocus,, Idle Champions
@@ -162,8 +162,8 @@ AutoUlt:
     {
         SendControlKey("0")
     }
-    
-return    
+
+return
 
 HeroLevel:
     ControlFocus,, Idle Champions ahk_exe IdleDragons.exe
@@ -241,6 +241,8 @@ UnsetAllHeroLevel:
 	GuiControl,, C11, 0
 	GuiControl,, C12, 0
 	GuiControl,, ClickDmg, 0
+
+    Gui, Submit, NoHide
 return
 
 SetAllHeroLevel:
@@ -257,6 +259,8 @@ SetAllHeroLevel:
 	GuiControl,, C11, 1
 	GuiControl,, C12, 1
 	GuiControl,, ClickDmg, 1
+
+    Gui, Submit, NoHide
 return
 
 UnsetAllUlt:
@@ -270,6 +274,8 @@ UnsetAllUlt:
 	GuiControl,, U8, 0
 	GuiControl,, U9, 0
 	GuiControl,, U10, 0
+
+    Gui, Submit, NoHide
 return
 
 SetAllUlt:
@@ -283,18 +289,20 @@ SetAllUlt:
 	GuiControl,, U8, 1
 	GuiControl,, U9, 1
 	GuiControl,, U10, 1
+
+    Gui, Submit, NoHide
 return
 
 SendControlKey(x)
 {
    if (A_TimeIdleKeyboard > 3000) {
-		ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe 
+		ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
    }
    if (A_TimeIdleKeyboard > 30000)
     {
-	ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe	
+	ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
    }
-   
+
 }
 
 
