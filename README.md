@@ -4,6 +4,13 @@
 # idleChampions-ahk
 Idle Champions of the Forgotten Realms AHK Macro Scripts
 
+ The purpose of this macro script is to automate levelups on Idle Champions of the forgotton Realms
+ 
+ This script requires AutohotKey (AHK) to run.
+ 
+ It was developed and tested on Version 1.1.33.10 https://www.autohotkey.com
+
+
 # Contributors
 - Original Author: Abydos, Fritz
 - orig filename: idlechamp-v1.4.ahk
