@@ -10,6 +10,7 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
  
  It was developed and tested on Version 1.1.33.10 https://www.autohotkey.com
 
+ Please see the comments in the top of the script, they may stay more up to date than this readme file
 
 # Contributors
 - Original Author: Abydos, Fritz
