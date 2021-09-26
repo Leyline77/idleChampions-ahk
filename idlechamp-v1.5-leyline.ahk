@@ -3,7 +3,7 @@
 ; from striderx2048 210614
 ; edited retaki
 
-; Current Version: 1.5.2
+; Current Version: 1.5.4
 
 ; edited Leyline (Swamp Fox II) 2021-09-23
 	; https://github.com/Leyline77/idleChampions-ahk
@@ -22,6 +22,16 @@
 	; 1.5.2
 	; Added spam {right} to skip boss
 	; Added autoclicker - (kill distractions add dps)
+	; 1.5.3
+	;	script version increment forgotten, still says 1.5.2
+	;	in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
+
+	; 1.5.4
+	;	Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
+	; 	This old code had been causing issues with double levelling, and also hindering AutoProgress
+	; TIP: skip boss animations is just press right, this will hinder the auto progress theory*
+	;	*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
+
 
 	; Helpful tips
 	; if you set your rate to 1 second, and then you have a hard time changing settings because the spamming is focusing out,
@@ -250,7 +260,7 @@ return
 
 doAutoClick:
 	if ( IsGameActive() ) {
-		ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ; 
+		ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
 	}
 return
 
@@ -262,8 +272,8 @@ doKillDistractions:
 	; WinGetPos , , , , , Idle Champions
 	; SetControlDelay -1
 
-	ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ; 
-	; ControlClick2(380, 265, "Idle Champions") ; 
+	ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
+	; ControlClick2(380, 265, "Idle Champions") ;
 return
 
 doRepeatFormation:
@@ -432,6 +442,7 @@ doAutoProgress:
 	;Turns off autoprogress with left key, then G to resume
 	ControlFocus,, Idle Champions
 	SendControlKey("Left")
+	sleep 5000
 	SendControlKey("g")
 return
 
@@ -620,17 +631,26 @@ SetAllUlt:
 return
 
 SendControlKey(x) {
-	; if ( IsGameActive() ) { ; Protects firing off the game, but also will not fire at all if the game was not fully focus
-		if (A_TimeIdleKeyboard > 3000) {
-			ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
-		}
-		if (A_TimeIdleKeyboard > 30000) {
-			ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
-		}
+	; if ( IsGameActive() ) { ; Protects firing when off the game, but also will not fire at all if the game was not fully focus
 	; }
-
+	if (A_TimeIdleKeyboard > 3000) {
+		ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
+	}
+	; send the key a second time if > 30s  no idea why this is here, removing.
+	; if (A_TimeIdleKeyboard > 30000) {
+	; 	ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
+	; }
 }
 
+
+; from zee / mike's script
+DirectedInput(s) {
+    ; ReleaseStuckKeys()
+    ; SafetyCheck()
+    ControlFocus,, ahk_exe IdleDragons.exe
+    ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
+    Sleep, 25  ; Sleep for 25 sec formerly ScriptSpeed global, not used elsewhere.
+}
 
 
 ;Esc::
