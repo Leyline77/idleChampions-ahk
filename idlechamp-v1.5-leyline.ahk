@@ -8,14 +8,16 @@
 ; edited Leyline (Swamp Fox II) 2021-09-23
 	; https://github.com/Leyline77/idleChampions-ahk
 
-	; fix auto progress - was only pressing G this would turn it off for 30 mins, turn it on for 30 mins.  now it will break progress with {left} and then g to continue
-	; Clarified some GUI options, such as repeat Formation
-	; Simplified GUI with Rate in Seconds or Minutes or Hours as appropriate instead of milliseconds
-	; Fixed variables and labels (subroutines) having the same name vAutoUlt sets AutoUlt & AutoUlt as a method...  Separated into VAutoUltimates and doAutoUltimates
-	; added temporary tooltips to show setting effects
-	; add gui boxes and sections for better gui positioning
-	; fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
-	; added game feature to change formations at certain time elapsed since setting checked off
+	; 1.5.0
+	; 	started development off ot the 1.4e code base
+	; 	fix auto progress - was only pressing G this would turn it off for 30 mins, turn it on for 30 mins.  now it will break progress with {left} and then g to continue
+	; 	Clarified some GUI options, such as repeat Formation
+	; 	Simplified GUI with Rate in Seconds or Minutes or Hours as appropriate instead of milliseconds
+	; 	Fixed variables and labels (subroutines) having the same name vAutoUlt sets AutoUlt & AutoUlt as a method...  Separated into VAutoUltimates and doAutoUltimates
+	; 	added temporary tooltips to show setting effects
+	; 	add gui boxes and sections for better gui positioning
+	; 	fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
+	; 	added game feature to change formations at certain time elapsed since setting checked off
 
 	; 1.5.1
 	; Fixed Increment Formation 3 (E)
@@ -40,13 +42,20 @@
 	; you can "increment" the formations in any order by setting them to a lower Time than another.
 	; you can pick just one formation to increment by only setting a time for that formation.
 
+	; todo 2021-09-27
+	; Change formation may not change if the party is tanking.
+	; Makechange formation go back change and then resume autoprogress or right once depending on resume autoprogress checkbox.
+
 
 	; todo 2021-09-23
 	; add rate / time for autoprogress to repeat on
 	; add a checkbox / setting to allow NumpadSub or choose a hotkey to reload the script?
 	; add a checkbox / setting that chooses a different hotkey for pause / unpause
-
 	; Add instructions / clarifications
+
+	; note: see if this is appropriate (does it help?)
+	; https://autohotkey.com/board/topic/11347-control-key-sticks-sometimes-since-i-added-blind/#entry73409
+
 	; review stuck keys here:  perhaps we can solidify the code
 	; https://www.autohotkey.com/boards/viewtopic.php?t=19711
 	;   While GetKeyState("Ctrl","P") || GetKeyState("LWin","P") || GetKeyState("RWin","P") || GetKeyState("Shift","P") || GetKeyState("Alt","P")
@@ -58,6 +67,7 @@
 #IfWinExist ahk_exe IdleDragons.exe
 #MaxThreadsPerHotkey 10
 
+CoordMode, Mouse, Client
 
 IsGameActive() {
   WinGetTitle, title, A
@@ -142,7 +152,7 @@ Gui 1:Add, CheckBox, y+10 vSkipBossAnimation gUpdate Checked0, Skip Level Animat
 
 Gui 1:Add, CheckBox, y+10 vAutoClick gUpdate Checked0, AutoClicker (100ms)
 
-; -Gui 1:Add, CheckBox, y+10 vKillDistractions gUpdate Checked0, Kill Distractions (100ms)
+Gui 1:Add, CheckBox, y+10 vKillDistractions gUpdate Checked0, Kill Distractions (100ms)
 
 
 Gui 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdate Checked0, Auto Progress [ON] (every hour)
@@ -272,7 +282,13 @@ doKillDistractions:
 	; WinGetPos , , , , , Idle Champions
 	; SetControlDelay -1
 
-	ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
+	;ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
+	MouseClick, left, 380, 265, 1
+
+	;familiar box to see (debug)
+	;ControlClick, 880 410, Idle Champions,, LEFT, 1, NA ;
+	;MouseClick, left, 880, 410, 1
+
 	; ControlClick2(380, 265, "Idle Champions") ;
 return
 
@@ -645,11 +661,11 @@ SendControlKey(x) {
 
 ; from zee / mike's script
 DirectedInput(s) {
-    ; ReleaseStuckKeys()
-    ; SafetyCheck()
-    ControlFocus,, ahk_exe IdleDragons.exe
-    ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
-    Sleep, 25  ; Sleep for 25 sec formerly ScriptSpeed global, not used elsewhere.
+	; ReleaseStuckKeys()
+	; SafetyCheck()
+	ControlFocus,, ahk_exe IdleDragons.exe
+	ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
+	Sleep, 25  ; Sleep for 25 sec formerly ScriptSpeed global, not used elsewhere.
 }
 
 
