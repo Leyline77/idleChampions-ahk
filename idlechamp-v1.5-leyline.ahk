@@ -3,7 +3,7 @@
 ; from striderx2048 210614
 ; edited retaki
 
-; Current Version: 1.5.4
+; Current Version: 1.5.5
 
 ; edited Leyline (Swamp Fox II) 2021-09-23
 	; https://github.com/Leyline77/idleChampions-ahk
@@ -20,10 +20,10 @@
 	; 	added game feature to change formations at certain time elapsed since setting checked off
 
 	; 1.5.1
-	; Fixed Increment Formation 3 (E)
+	; 	Fixed Increment Formation 3 (E)
 	; 1.5.2
-	; Added spam {right} to skip boss
-	; Added autoclicker - (kill distractions add dps)
+	; 	Added spam {right} to skip boss
+	; 	Added autoclicker - (kill distractions add dps)
 	; 1.5.3
 	;	script version increment forgotten, still says 1.5.2
 	;	in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
@@ -31,8 +31,18 @@
 	; 1.5.4
 	;	Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
 	; 	This old code had been causing issues with double levelling, and also hindering AutoProgress
-	; TIP: skip boss animations is just press right, this will hinder the auto progress theory*
-	;	*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
+	; 	TIP: skip boss animations is just press right, this will hinder the auto progress theory*
+	;		*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
+
+	; 1.5.5
+	; 	reintroduced kill distractions, WARNING this will hijack ytour mouse, remember the Pause key
+	; 	reformatted the GUI
+	; 		removed the word Seat all the time, the numbers should be self explanatory
+	; 		Made the columns narrower
+	; 		Adopted the left=cancel right=ok format for Clear All and Set All Buttons (they are backwards)
+	; 	added test code to develop / test controlClick2 hopefully for sending background clicks
+	; fix - Change formation may work if the party is tanking.
+	; 	Added setFormation - go back 1 level, change and then resume autoprogress or right once depending on resume autoprogress checkbox.
 
 
 	; Helpful tips
@@ -42,9 +52,6 @@
 	; you can "increment" the formations in any order by setting them to a lower Time than another.
 	; you can pick just one formation to increment by only setting a time for that formation.
 
-	; todo 2021-09-27
-	; Change formation may not change if the party is tanking.
-	; Makechange formation go back change and then resume autoprogress or right once depending on resume autoprogress checkbox.
 
 
 	; todo 2021-09-23
@@ -80,55 +87,55 @@ IsGameActive() {
 initialTick := 0
 
 
-Gui 1:Add, GroupBox, r12 w200,
+Gui 1:Add, GroupBox, r13 w120,
 
 Gui 1:Add, CheckBox, w90 xp+10 vAutoLevel gUpdate Checked0, Auto Leveling
 
-Gui 1:Add, CheckBox, vC1 gUpdate Checked Section, Seat 1
-Gui 1:Add, CheckBox, vC2 gUpdate Checked, Seat 2
-Gui 1:Add, CheckBox, vC3 gUpdate Checked, Seat 3
-Gui 1:Add, CheckBox, vC4 gUpdate Checked, Seat 4
-Gui 1:Add, CheckBox, vC5 gUpdate Checked, Seat 5
-Gui 1:Add, CheckBox, vC6 gUpdate Checked, Seat 6
-Gui 1:Add, CheckBox, vClickDmg gUpdate Checked, Click Damage
+Gui 1:Add, CheckBox, w50 vC1 gUpdate Checked Section, 1
+Gui 1:Add, CheckBox, vC2 gUpdate Checked, 2
+Gui 1:Add, CheckBox, vC3 gUpdate Checked, 3
+Gui 1:Add, CheckBox, vC4 gUpdate Checked, 4
+Gui 1:Add, CheckBox, vC5 gUpdate Checked, 5
+Gui 1:Add, CheckBox, vC6 gUpdate Checked, 6
+Gui 1:Add, CheckBox, vClickDmg gUpdate Checked, Click
 
-Gui 1:Add, Text, w90 xs ys+150, Rate (seconds):
-Gui 1:Add, DropDownList, w90 vLevelingRate gUpdate, 1|5||10|15|30|60
+Gui 1:Add, Text, w50 xs ys+150, Rate (seconds):
+Gui 1:Add, DropDownList, w50 vLevelingRate gUpdate, 1|5||10|15|30|60
 
-Gui 1:Add, Button, w90 y+6 gSetAllHeroLevel, Set All
-
-
-
-Gui 1:Add, CheckBox, x+5 ys vC7 gUpdate Checked Section, Seat 7
-Gui 1:Add, CheckBox, vC8 gUpdate Checked, Seat 8
-Gui 1:Add, CheckBox, vC9 gUpdate Checked, Seat 9
-Gui 1:Add, CheckBox, vC10 gUpdate Checked, Seat 10
-Gui 1:Add, CheckBox, vC11 gUpdate Checked, Seat 11
-Gui 1:Add, CheckBox, vC12 gUpdate Checked, Seat 12
-
-
-Gui 1:Add, Text, w90 xs ys+150, Priority Seat:
-Gui 1:Add, DropDownList, w90 vPriorityChamp gUpdate, 1|2|3|4|5|6||7|8|9|10|11|12|
-
-Gui 1:Add, Button, w90 y+6 gUnsetAllHeroLevel, Clear All
+Gui 1:Add, Button, w50 y+6 gUnsetAllHeroLevel, Clear All
 
 
 
+Gui 1:Add, CheckBox, x+5 ys vC7 gUpdate Checked Section, 7
+Gui 1:Add, CheckBox, vC8 gUpdate Checked, 8
+Gui 1:Add, CheckBox, vC9 gUpdate Checked, 9
+Gui 1:Add, CheckBox, vC10 gUpdate Checked, 10
+Gui 1:Add, CheckBox, vC11 gUpdate Checked, 11
+Gui 1:Add, CheckBox, vC12 gUpdate Checked, 12
 
-Gui 1:Add, GroupBox, x+10 y6 r12 w200,
+
+Gui 1:Add, Text, w50 xs ys+150, Priority Seat:
+Gui 1:Add, DropDownList, w50 vPriorityChamp gUpdate, 1|2|3|4|5|6||7|8|9|10|11|12|
+
+Gui 1:Add, Button, w50 y+6 gSetAllHeroLevel, Set All
+
+
+
+
+Gui 1:Add, GroupBox, x+10 y6 r13 w120,
 
 Gui 1:Add, CheckBox, w90 xp+10 vAutoUltimates gUpdate Checked0, Auto Ultimates
 
-Gui 1:Add, CheckBox, vU1 gUpdate Checked Section, Ult 1
+Gui 1:Add, CheckBox, w50 vU1 gUpdate Checked Section, Ult 1
 Gui 1:Add, CheckBox, vU2 gUpdate Checked, Ult 2
 Gui 1:Add, CheckBox, vU3 gUpdate Checked, Ult 3
 Gui 1:Add, CheckBox, vU4 gUpdate Checked, Ult 4
 Gui 1:Add, CheckBox, vU5 gUpdate Checked, Ult 5
 
-Gui 1:Add, Text, w90 xs ys+150, Rate (seconds):
-Gui 1:Add, DropDownList, w90 vUltRate gUpdate, 1|5||10|15|30|60|300
+Gui 1:Add, Text, w50 xs ys+150, Rate (seconds):
+Gui 1:Add, DropDownList, w50 vUltRate gUpdate, 1|5||10|15|30|60|300
 
-Gui 1:Add, Button, w90 y+6 gSetAllUlt, Set All
+Gui 1:Add, Button, w50 y+6 gUnsetAllUlt, Clear All
 
 
 Gui 1:Add, CheckBox, x+5 ys vU6 gUpdate Checked Section, Ult 6
@@ -138,9 +145,9 @@ Gui 1:Add, CheckBox, vU9 gUpdate Checked, Ult 9
 Gui 1:Add, CheckBox, vU10 gUpdate Checked, Ult 10
 
 
-Gui 1:Add, Button, w90 xs ys+196 gUnsetAllUlt, Clear All
+Gui 1:Add, Button, w50 xs ys+209 gSetAllUlt, Set All
 
-Gui 1:Add, GroupBox, x+10 y6 r12 w200,
+Gui 1:Add, GroupBox, x+10 y6 r13 w200,
 Gui 1:Add, CheckBox,  xp+10 vRepeatFormation gUpdate Checked0, Repeat Formation
 
 Gui 1:Add, Text, Section , Formation:
@@ -152,7 +159,7 @@ Gui 1:Add, CheckBox, y+10 vSkipBossAnimation gUpdate Checked0, Skip Level Animat
 
 Gui 1:Add, CheckBox, y+10 vAutoClick gUpdate Checked0, AutoClicker (100ms)
 
-Gui 1:Add, CheckBox, y+10 vKillDistractions gUpdate Checked0, Kill Distractions (100ms)
+Gui 1:Add, CheckBox, y+10 vKillDistractions gUpdate Checked0, Kill Distractions (60ms)
 
 
 Gui 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdate Checked0, Auto Progress [ON] (every hour)
@@ -162,8 +169,8 @@ Gui 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdate Checked0, Auto Progress [ON
 ;Gui 1:Add, Progress, y+10 w120 h20 -%PBS_SMOOTH% vProgPercent, 0
 
 
-Gui 1:Add, GroupBox, x+25 y6 r12 w150,
-Gui 1:Add, CheckBox, xp+10 w150  vIncrementFormations gdoIncrementFormation Checked0 Section, Increment Formations
+Gui 1:Add, GroupBox, x+25 y6 r13 w150,
+Gui 1:Add, CheckBox, xp+10 w130  vIncrementFormations gdoIncrementFormation Checked0 Section, Increment Formations
 
 Gui 1:Add, Text, xs y+5, Formation 1 (Q)
 Gui 1:Add, DropDownList,  vIncrementFormationRateQ gUpdate, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
@@ -176,10 +183,11 @@ Gui 1:Add, DropDownList, vIncrementFormationRateE gUpdate, 0||0.5|1.0|1.5|2.0|2.
 
 
 Gui 1:Add, Text, xp y+15, (Set hours until each switch)
+Gui 1:Add, Text, xp y+10, AutoProgress Reccomended
 
 Gui 1: Add, edit, xs ys+216 w120 vidletime, 00:00:00
 
-Gui 1:Add, GroupBox, x+25 y6 r12 w140,
+Gui 1:Add, GroupBox, x+25 y6 r13 w140,
 
 Gui 1:Add, Button, xp+10 yp+20 gQuit, Quit
 
@@ -242,7 +250,7 @@ Update: ; do the work based on GUI controls calling this subroutine
 
 	; yes I know this is not here now.
 	if ( KillDistractions = 1 ) {
-		SetTimer, doKillDistractions, 100
+		SetTimer, doKillDistractions, 60
 	} else {
 		SetTimer, doKillDistractions, Off
 	}
@@ -274,22 +282,32 @@ doAutoClick:
 	}
 return
 
-doKillDistractions:
+doClickTest:
 	ControlFocus,, Idle Champions
+	; click on familiar box to see click flashes (debug)
+	; MouseMove, 880, 410, 4
+	; ControlClick, x880 y410, Idle Champions,, LEFT, 1, x880 y410 ;
 
-	; I can't get it to work at a specified location so for now it is just autoClick
-	; CoordMode, Click, Screen
+	; SendMessage, WM_SETCURSOR, [wParam, lParam, Control, WinTitle, WinText, ExcludeTitle, ExcludeText, Timeout]
 	; WinGetPos , , , , , Idle Champions
 	; SetControlDelay -1
 
-	;ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
-	MouseClick, left, 380, 265, 1
+	; ControlMouseMove(x, y, c%A_Index%, "ahk_id " w%A_Index%, "", "L K")
+	;ControlClick, x880 y410, Idle Champions,, LEFT, 1, NA ;
 
-	;familiar box to see (debug)
-	;ControlClick, 880 410, Idle Champions,, LEFT, 1, NA ;
-	;MouseClick, left, 880, 410, 1
+	ControlClick2(880, 410, "Idle Champions") ;
+return
 
-	; ControlClick2(380, 265, "Idle Champions") ;
+doKillDistractions:
+	; mouse grid, 3 rows center screen spam clicks kill distractions - this works but takes cursor
+	ControlFocus,, Idle Champions
+
+	MouseClick, left, 640, 125, 1 ; works but takes mouse
+	sleep 20
+	MouseClick, left, 640, 175, 1 ; works but takes mouse
+	sleep 20
+	MouseClick, left, 640, 225, 1 ; works but takes mouse
+	sleep 20
 return
 
 doRepeatFormation:
@@ -373,7 +391,8 @@ checkMasterTicks:
 		IncrementFormationRateQ := 0
 		GuiControl, ChooseString, IncrementFormationRateQ, 0
 		ControlFocus,, Idle Champions
-		SendControlKey("q")
+
+		setFormation("q")
 		; gosub SetAllHeroLevel_Q
 	}
 
@@ -382,7 +401,7 @@ checkMasterTicks:
 		IncrementFormationRateW := 0
 		GuiControl, ChooseString, IncrementFormationRateW, 0
 		ControlFocus,, Idle Champions
-		SendControlKey("w")
+		setFormation("w")
 		; gosub SetAllHeroLevel_W
 	}
 
@@ -391,7 +410,7 @@ checkMasterTicks:
 		mTip("I did the formation - E")
 		IncrementFormationRateE := 0
 		GuiControl, ChooseString, IncrementFormationRateE, 0
-		SendControlKey("e")
+		setFormation("e")
 		; gosub SetAllHeroLevel_E
 	}
 
@@ -422,43 +441,27 @@ doIncrementFormation:
 		SetTimer checkMasterTicks, off
 	}
 
-	if (false) {
-
-	mTip("doAutoFormation : FormationSelect")
-
-	; add an option to restart the incrementFormation NoTimers
-	; add a control in the GUI to show the timer countdown till they fire :)
-	; add configs to choose the number of hours to run the formation upgrades
-
-
-	;perhaps we could check the timers once, and then never re-set them, only clear.  or start them from the original again?
-
-
-	ControlFocus,, Idle Champions
-	if ( IncrementFormationQ = 1 ) {
-		;setGlobalTimer here  something like checkTicksQ
-		;SendControlKey("q")
-	}
-	if ( IncrementFormationW = 2 ) {
-		;setGlobalTimer here  something like checkTicksW
-		;SendControlKey("w")
-	}
-	if ( IncrementFormationE = 3 ) {
-		;setGlobalTimer here  something like checkTicksE
-		;SendControlKey("e")
-	}
-
-
-	}
-
 return
 
+setFormation(sFormation) {
+	ControlFocus,, Idle Champions
+
+	sleep 3250 ; for testing make sure noone was typing.
+	SendControlKey("left")
+	SendControlKey(sFormation)
+	if ( true or AutoProgress = 1 ) {
+		SendControlKey("g")
+	} else {
+		sleep 10000
+		SendControlKey("right")
+	}
+}
 
 doAutoProgress:
 	;Turns off autoprogress with left key, then G to resume
 	ControlFocus,, Idle Champions
 	SendControlKey("Left")
-	sleep 5000
+	sleep 750
 	SendControlKey("g")
 return
 
@@ -669,8 +672,119 @@ DirectedInput(s) {
 }
 
 
+ControlFromPoint(X, Y, WinTitle="", WinText="", ByRef cX="", ByRef cY="", ExcludeTitle="", ExcludeText="") {
+	static EnumChildFindPointProc=0
+	if !EnumChildFindPointProc {
+		EnumChildFindPointProc := RegisterCallback("EnumChildFindPoint","Fast")
+	}
+
+
+	if !(target_window := WinExist(WinTitle, WinText, ExcludeTitle, ExcludeText)) {
+		return false
+	}
+
+
+	VarSetCapacity(rect, 16)
+	DllCall("GetWindowRect","uint",target_window,"uint",&rect)
+	VarSetCapacity(pah, 36, 0)
+	NumPut(X + NumGet(rect,0,"int"), pah,0,"int")
+	NumPut(Y + NumGet(rect,4,"int"), pah,4,"int")
+	DllCall("EnumChildWindows","uint",target_window,"uint",EnumChildFindPointProc,"uint",&pah)
+	control_window := NumGet(pah,24) ? NumGet(pah,24) : target_window
+	DllCall("ScreenToClient","uint",control_window,"uint",&pah)
+	cX:=NumGet(pah,0,"int"), cY:=NumGet(pah,4,"int")
+	return control_window
+}
+
+; Ported from AutoHotkey::script2.cpp::EnumChildFindPoint()
+EnumChildFindPoint(aWnd, lParam) {
+	if !DllCall("IsWindowVisible","uint",aWnd)
+	return true
+
+	VarSetCapacity(rect, 16)
+	if !DllCall("GetWindowRect","uint",aWnd,"uint",&rect)
+	return true
+
+	pt_x:=NumGet(lParam+0,0,"int"), pt_y:=NumGet(lParam+0,4,"int")
+	rect_left:=NumGet(rect,0,"int"), rect_right:=NumGet(rect,8,"int")
+	rect_top:=NumGet(rect,4,"int"), rect_bottom:=NumGet(rect,12,"int")
+
+	if (pt_x >= rect_left && pt_x <= rect_right && pt_y >= rect_top && pt_y <= rect_bottom) {
+		center_x := rect_left + (rect_right - rect_left) / 2
+		center_y := rect_top + (rect_bottom - rect_top) / 2
+		distance := Sqrt((pt_x-center_x)**2 + (pt_y-center_y)**2)
+		update_it := !NumGet(lParam+24)
+
+		if (!update_it) {
+			rect_found_left:=NumGet(lParam+8,0,"int"), rect_found_right:=NumGet(lParam+8,8,"int")
+			rect_found_top:=NumGet(lParam+8,4,"int"), rect_found_bottom:=NumGet(lParam+8,12,"int")
+			if (rect_left >= rect_found_left && rect_right <= rect_found_right
+			&& rect_top >= rect_found_top && rect_bottom <= rect_found_bottom)
+			update_it := true
+			else if (distance < NumGet(lParam+28,0,"double")
+			&& (rect_found_left < rect_left || rect_found_right > rect_right
+			| rect_found_top < rect_top || rect_found_bottom > rect_bottom))
+			update_it := true
+		}
+
+		if (update_it) {
+			NumPut(aWnd, lParam+24)
+			DllCall("RtlMoveMemory","uint",lParam+8,"uint",&rect,"uint",16)
+			NumPut(distance, lParam+28, 0, "double")
+		}
+	}
+
+	return true
+}
+
+MAKELONG(LOWORD, HIWORD, Hex := False) {
+   ; WORD = 2 bytes = 16 bits
+   LONG := (LOWORD & 0xFFFF) | ((HIWORD & 0xFFFF) << 16)
+   Sign := (LONG & 0x80000000) ? (Hex ? "-" : -1) : (Hex ? "" : 1)
+   Return (Hex ? Format(Sign . "0x{:08X}", LONG) : (LONG * Sign))
+}
+
+ControlClick2(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
+	lparam := MakeLong(X, Y)
+	; lParam := X&0xFFFF | (Y & 0xFFFF) <<16 ; do it manually?
+	wParam := 0 ;
+	hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)
+
+
+	; PostMessage, 0x200, 0, %lparam%, , ahk_id %hwnd% ; Move
+	; PostMessage, 0x201, 0x0001, %lparam%, , ahk_id %hwnd% ; LButtonDown
+	; PostMessage, 0x202 , 0, %lparam%, , ahk_id %hwnd% ; LButtonUp
+
+	PostMessage, 0x200, %wParam%, %lParam%,, ahk_id %hwnd% ; WM_MOUSEMOVE
+	PostMessage, 0x2A1, %wParam%, %lParam%,, ahk_id %hwnd% ; WM_MOUSEHOVER
+	;PostMessage, 0x06, 0x0001, %lParam%,, ahk_id %hwnd% ; Activate
+	;PostMessage, 0x20, 0x0001, %lParam%,, ahk_id %hwnd% ; Set Cursor
+	PostMessage, 0x201, 0x0001, %lParam%,, ahk_id %hwnd% ; WM_LBUTTONDOWN
+	PostMessage, 0x202, %wParam%, %lParam%,, ahk_id %hwnd% ; WM_LBUTTONUP
+}
+
+ControlClick2_orig(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
+	hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)
+	PostMessage, 0x200, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEMOVE
+	PostMessage, 0x2A1, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEHOVER
+	PostMessage, 0x201, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONDOWN
+	PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP
+}
+
 ;Esc::
 	;ExitApp
+;return
+
+; CoordMode, mouse, screen ; does NOT use active window coords
+^numpad0:: ; Ctrl + left hotkey
+	SetTimer, doClickTest, off
+Return
+^numpad1:: ; Ctrl + right hotkey
+	SetTimer, doClickTest, 60
+Return
+
+;^up:: ;control up hotkey
+;	setFormation("q")
 ;return
 
 NumpadSub:: ; for quick reloads during development
@@ -680,6 +794,7 @@ return
 Pause::Pause  ; The Pause/Break key.
 #p::Pause  ; Win+P
 ;=::Pause  ; placeholder for an easy key during mobile remote desktop, or steam link play.
+
 
 Quit:
 ExitApp
