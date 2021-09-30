@@ -2,211 +2,249 @@
 ; orig filename: idlechamp-v1.4.ahk
 ; from striderx2048 210614
 ; edited retaki
-
-; Current Version: 1.5.5
-
-; edited Leyline (Swamp Fox II) 2021-09-23
-	; https://github.com/Leyline77/idleChampions-ahk
-
-	; 1.5.0
-	; 	started development off ot the 1.4e code base
-	; 	fix auto progress - was only pressing G this would turn it off for 30 mins, turn it on for 30 mins.  now it will break progress with {left} and then g to continue
-	; 	Clarified some GUI options, such as repeat Formation
-	; 	Simplified GUI with Rate in Seconds or Minutes or Hours as appropriate instead of milliseconds
-	; 	Fixed variables and labels (subroutines) having the same name vAutoUlt sets AutoUlt & AutoUlt as a method...  Separated into VAutoUltimates and doAutoUltimates
-	; 	added temporary tooltips to show setting effects
-	; 	add gui boxes and sections for better gui positioning
-	; 	fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
-	; 	added game feature to change formations at certain time elapsed since setting checked off
-
-	; 1.5.1
-	; 	Fixed Increment Formation 3 (E)
-	; 1.5.2
-	; 	Added spam {right} to skip boss
-	; 	Added autoclicker - (kill distractions add dps)
-	; 1.5.3
-	;	script version increment forgotten, still says 1.5.2
-	;	in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
-
-	; 1.5.4
-	;	Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
-	; 	This old code had been causing issues with double levelling, and also hindering AutoProgress
-	; 	TIP: skip boss animations is just press right, this will hinder the auto progress theory*
-	;		*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
-
-	; 1.5.5
-	; 	reintroduced kill distractions, WARNING this will hijack ytour mouse, remember the Pause key
-	; 	reformatted the GUI
-	; 		removed the word Seat all the time, the numbers should be self explanatory
-	; 		Made the columns narrower
-	; 		Adopted the left=cancel right=ok format for Clear All and Set All Buttons (they are backwards)
-	; 	added test code to develop / test controlClick2 hopefully for sending background clicks
-	; fix - Change formation may work if the party is tanking.
-	; 	Added setFormation - go back 1 level, change and then resume autoprogress or right once depending on resume autoprogress checkbox.
-
-
-	; Helpful tips
-	; if you set your rate to 1 second, and then you have a hard time changing settings because the spamming is focusing out,
-	; use the PAUSE / BREAK key on your keyboard to pause the script.
-	; if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
-	; you can "increment" the formations in any order by setting them to a lower Time than another.
-	; you can pick just one formation to increment by only setting a time for that formation.
-
-
-
-	; todo 2021-09-23
-	; add rate / time for autoprogress to repeat on
-	; add a checkbox / setting to allow NumpadSub or choose a hotkey to reload the script?
-	; add a checkbox / setting that chooses a different hotkey for pause / unpause
-	; Add instructions / clarifications
-
-	; note: see if this is appropriate (does it help?)
-	; https://autohotkey.com/board/topic/11347-control-key-sticks-sometimes-since-i-added-blind/#entry73409
-
-	; review stuck keys here:  perhaps we can solidify the code
-	; https://www.autohotkey.com/boards/viewtopic.php?t=19711
-	;   While GetKeyState("Ctrl","P") || GetKeyState("LWin","P") || GetKeyState("RWin","P") || GetKeyState("Shift","P") || GetKeyState("Alt","P")
-	;       Sleep 50
-	;   Send {something}
-	;   return
+;
+; Current Version: 1.5.7
+;
+; edited Leyline (Discord: Swamp Fox II) 2021-09-23
+;	https://github.com/Leyline77/idleChampions-ahk
+;
+;	Idle Champions of the Forgotten Realms AHK Macro Scripts
+;	The purpose of this macro script is to automate levelups and simple tasks in the game: Idle Champions of the forgotton Realms
+;	This script requires AutohotKey (AHK) to run.
+;	This script was developed and tested on AHK Version 1.1.33.10 https://www.autohotkey.com
+;	This script works by sending key or mouse clicks to the game client window, it does not read or edit memory.
+;
+;	Helpful tips
+;	Use the PAUSE / BREAK key on your keyboard to pause the script.
+;		example: If you set your rate to 1 second or turn on a clicking feature,
+;		you may have a hard time changing settings because the click / key spam is focuses back to IC
+;	Increment Formations:
+;		if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
+;		you can "increment" the formations in any order by setting them to a lower Time than another.
+;		you can pick just one formation to increment by only setting a time for that formation.
+;
+;	1.5.0
+;		started development off ot the 1.4e code base
+;		fix auto progress - was only pressing G this would turn it off for 30 mins, turn it on for 30 mins.  now it will break progress with {left} and then g to continue
+;		Clarified some GUI options, such as repeat Formation
+;		Simplified GUI with Rate in Seconds or Minutes or Hours as appropriate instead of milliseconds
+;		Fixed variables and labels (subroutines) having the same name vAutoUlt sets AutoUlt & AutoUlt as a method...  Separated into VAutoUltimates and doAutoUltimates
+;		added temporary tooltips to show setting effects
+;		add gui boxes and sections for better gui positioning
+;		fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
+;		added game feature to change formations at certain time elapsed since setting checked off
+;
+;	1.5.1
+;		Fixed Increment Formation 3 (E)
+;	1.5.2
+;		Added spam {right} to skip boss
+;		Added autoclicker - (kill distractions add dps)
+;	1.5.3
+;		script version increment forgotten, still says 1.5.2
+;		in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
+;;	1.5.4
+;		Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
+;		This old code had been causing issues with double levelling, and also hindering AutoProgress
+;		TIP: skip boss animations is just press right, this will hinder the auto progress theory*
+;			*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
+;;	1.5.5
+;		reintroduced kill distractions, WARNING this will hijack ytour mouse, remember the Pause key
+;		reformatted the GUI
+;			removed the word Seat all the time, the numbers should be self explanatory
+;			Made the columns narrower
+;			Adopted the left=cancel right=ok format for Clear All and Set All Buttons (they are backwards)
+;		added test code to develop / test controlClick2 hopefully for sending background clicks
+;	fix - Change formation may work if the party is tanking.
+;		Added setFormation - go back 1 level, change and then resume autoprogress or right once depending on resume autoprogress checkbox.
+;
+;	1.5.6
+;		Added center click to kill distractions to grab gem bags.  Also adds a click on the field, do not need advance boss if you use this(?)
+;	1.5.7
+;		Wow sorry for all the changes, reformatted notes and such on the top of the script,
+;		added a return at the end of the (apparent?) main code section,
+;		scoped all of the GUI and GuiControl calls to 1: (the current named gui?)
+;		Made makeGui function so the code is not sitting in the main area,
+;		other code cleanups and updates, some dev code sitting around too.
+;
+;	todo 2021-09-23
+;		add rate / time for autoprogress to repeat on
+;		add a checkbox / setting to allow NumpadSub or choose a hotkey to reload the script?
+;		add a checkbox / setting that chooses a different hotkey for pause / unpause
+;		Add instructions / clarifications
+;
+;		Will this help? Add a 3250ms delay when GUI is checked before starting key send timers - because sendControlKey ignore all input for 3s anyway....
+;
+;	investigate: see if this is appropriate (does it help?)
+;		https://autohotkey.com/board/topic/11347-control-key-sticks-sometimes-since-i-added-blind/#entry73409
+;
+;	investigate: review stuck keys code - perhaps we can solidify this script?
+;		https://www.autohotkey.com/boards/viewtopic.php?t=19711
+;		  While GetKeyState("Ctrl","P") || GetKeyState("LWin","P") || GetKeyState("RWin","P") || GetKeyState("Shift","P") || GetKeyState("Alt","P")
+;		      Sleep 50
+;		  Send {something}
+;		  return
 
 #SingleInstance force
 #IfWinExist ahk_exe IdleDragons.exe
 #MaxThreadsPerHotkey 10
 
 CoordMode, Mouse, Client
-
-IsGameActive() {
-  WinGetTitle, title, A
-  return title == "Idle Champions"
-}
-
-
-;global PBS_SMOOTH            := 0x00000001
-
-initialTick := 0
-
-
-Gui 1:Add, GroupBox, r13 w120,
-
-Gui 1:Add, CheckBox, w90 xp+10 vAutoLevel gUpdate Checked0, Auto Leveling
-
-Gui 1:Add, CheckBox, w50 vC1 gUpdate Checked Section, 1
-Gui 1:Add, CheckBox, vC2 gUpdate Checked, 2
-Gui 1:Add, CheckBox, vC3 gUpdate Checked, 3
-Gui 1:Add, CheckBox, vC4 gUpdate Checked, 4
-Gui 1:Add, CheckBox, vC5 gUpdate Checked, 5
-Gui 1:Add, CheckBox, vC6 gUpdate Checked, 6
-Gui 1:Add, CheckBox, vClickDmg gUpdate Checked, Click
-
-Gui 1:Add, Text, w50 xs ys+150, Rate (seconds):
-Gui 1:Add, DropDownList, w50 vLevelingRate gUpdate, 1|5||10|15|30|60
-
-Gui 1:Add, Button, w50 y+6 gUnsetAllHeroLevel, Clear All
-
-
-
-Gui 1:Add, CheckBox, x+5 ys vC7 gUpdate Checked Section, 7
-Gui 1:Add, CheckBox, vC8 gUpdate Checked, 8
-Gui 1:Add, CheckBox, vC9 gUpdate Checked, 9
-Gui 1:Add, CheckBox, vC10 gUpdate Checked, 10
-Gui 1:Add, CheckBox, vC11 gUpdate Checked, 11
-Gui 1:Add, CheckBox, vC12 gUpdate Checked, 12
-
-
-Gui 1:Add, Text, w50 xs ys+150, Priority Seat:
-Gui 1:Add, DropDownList, w50 vPriorityChamp gUpdate, 1|2|3|4|5|6||7|8|9|10|11|12|
-
-Gui 1:Add, Button, w50 y+6 gSetAllHeroLevel, Set All
-
-
-
-
-Gui 1:Add, GroupBox, x+10 y6 r13 w120,
-
-Gui 1:Add, CheckBox, w90 xp+10 vAutoUltimates gUpdate Checked0, Auto Ultimates
-
-Gui 1:Add, CheckBox, w50 vU1 gUpdate Checked Section, Ult 1
-Gui 1:Add, CheckBox, vU2 gUpdate Checked, Ult 2
-Gui 1:Add, CheckBox, vU3 gUpdate Checked, Ult 3
-Gui 1:Add, CheckBox, vU4 gUpdate Checked, Ult 4
-Gui 1:Add, CheckBox, vU5 gUpdate Checked, Ult 5
-
-Gui 1:Add, Text, w50 xs ys+150, Rate (seconds):
-Gui 1:Add, DropDownList, w50 vUltRate gUpdate, 1|5||10|15|30|60|300
-
-Gui 1:Add, Button, w50 y+6 gUnsetAllUlt, Clear All
-
-
-Gui 1:Add, CheckBox, x+5 ys vU6 gUpdate Checked Section, Ult 6
-Gui 1:Add, CheckBox, vU7 gUpdate Checked, Ult 7
-Gui 1:Add, CheckBox, vU8 gUpdate Checked, Ult 8
-Gui 1:Add, CheckBox, vU9 gUpdate Checked, Ult 9
-Gui 1:Add, CheckBox, vU10 gUpdate Checked, Ult 10
-
-
-Gui 1:Add, Button, w50 xs ys+209 gSetAllUlt, Set All
-
-Gui 1:Add, GroupBox, x+10 y6 r13 w200,
-Gui 1:Add, CheckBox,  xp+10 vRepeatFormation gUpdate Checked0, Repeat Formation
-
-Gui 1:Add, Text, Section , Formation:
-Gui 1:Add, DropDownList,  vRepeatFormationSelect gUpdate, 1||2|3
-Gui 1:Add, Text, , Rate (Seconds):
-Gui 1:Add, DropDownList,  vRepeatFormationRate gUpdate, 1|5||10|15|30|60|120
-
-Gui 1:Add, CheckBox, y+10 vSkipBossAnimation gUpdate Checked0, Skip Level Animation (500ms)
-
-Gui 1:Add, CheckBox, y+10 vAutoClick gUpdate Checked0, AutoClicker (100ms)
-
-Gui 1:Add, CheckBox, y+10 vKillDistractions gUpdate Checked0, Kill Distractions (60ms)
-
-
-Gui 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdate Checked0, Auto Progress [ON] (every hour)
-
-
-;trying to add progress bars for the firing of the events....
-;Gui 1:Add, Progress, y+10 w120 h20 -%PBS_SMOOTH% vProgPercent, 0
-
-
-Gui 1:Add, GroupBox, x+25 y6 r13 w150,
-Gui 1:Add, CheckBox, xp+10 w130  vIncrementFormations gdoIncrementFormation Checked0 Section, Increment Formations
-
-Gui 1:Add, Text, xs y+5, Formation 1 (Q)
-Gui 1:Add, DropDownList,  vIncrementFormationRateQ gUpdate, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
-
-Gui 1:Add, Text, , Formation 2 (W)
-Gui 1:Add, DropDownList, vIncrementFormationRateW gUpdate, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
-
-Gui 1:Add, Text, , Formation 3 (E)
-Gui 1:Add, DropDownList, vIncrementFormationRateE gUpdate, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
-
-
-Gui 1:Add, Text, xp y+15, (Set hours until each switch)
-Gui 1:Add, Text, xp y+10, AutoProgress Reccomended
-
-Gui 1: Add, edit, xs ys+216 w120 vidletime, 00:00:00
-
-Gui 1:Add, GroupBox, x+25 y6 r13 w140,
-
-Gui 1:Add, Button, xp+10 yp+20 gQuit, Quit
-
-Gui 1:Add, Button, w100 y+6 gSetAllHeroLevel_Q, Set ToA Q
-Gui 1:Add, Button, w100 y+6 gSetAllHeroLevel_W, Set ToA W
-Gui 1:Add, Button, w100 y+6 gSetAllHeroLevel_E, Set ToA E
-
-
-Gui 1:Add, Text,, Win+P (Pause script)
-
-Gui 1:Show
-
-
 setmousedelay -1
 setbatchlines -1
 
+;global PBS_SMOOTH            := 0x00000001
 
-Update: ; do the work based on GUI controls calling this subroutine
-	Gui, Submit, NoHide
+global initialTick := 0
+global IdleTime := 0
+global vFormationChecks := 0
+
+
+makeGui()
+;end of main code area
+return
+
+
+makeGui() {
+
+	Gui, 1:New
+	; BOX AREA
+	Gui, 1:Add, GroupBox, r13 w120,
+
+	Gui, 1:Add, CheckBox, w90 xp+10 vAutoLevel gUpdateFromGUI Checked0, Auto Leveling
+
+	Gui, 1:Add, CheckBox, w50 vC1 gUpdateFromGUI Checked Section, 1
+	Gui, 1:Add, CheckBox, vC2 gUpdateFromGUI Checked, 2
+	Gui, 1:Add, CheckBox, vC3 gUpdateFromGUI Checked, 3
+	Gui, 1:Add, CheckBox, vC4 gUpdateFromGUI Checked, 4
+	Gui, 1:Add, CheckBox, vC5 gUpdateFromGUI Checked, 5
+	Gui, 1:Add, CheckBox, vC6 gUpdateFromGUI Checked, 6
+	Gui, 1:Add, CheckBox, vClickDmg gUpdateFromGUI Checked, Click
+
+	Gui, 1:Add, Text, w50 xs ys+150, Rate (seconds):
+	Gui, 1:Add, DropDownList, w50 vLevelingRate gUpdateFromGUI, 1|5||10|15|30|60
+
+	Gui, 1:Add, Button, w50 y+6 gUnsetAllHeroLevel, Clear All
+
+
+
+	Gui, 1:Add, CheckBox, x+5 ys vC7 gUpdateFromGUI Checked Section, 7
+	Gui, 1:Add, CheckBox, vC8 gUpdateFromGUI Checked, 8
+	Gui, 1:Add, CheckBox, vC9 gUpdateFromGUI Checked, 9
+	Gui, 1:Add, CheckBox, vC10 gUpdateFromGUI Checked, 10
+	Gui, 1:Add, CheckBox, vC11 gUpdateFromGUI Checked, 11
+	Gui, 1:Add, CheckBox, vC12 gUpdateFromGUI Checked, 12
+
+
+	Gui, 1:Add, Text, w50 xs ys+150, Priority Seat:
+	Gui, 1:Add, DropDownList, w50 vPriorityChamp gUpdateFromGUI, 1|2|3|4|5|6||7|8|9|10|11|12|
+
+	Gui, 1:Add, Button, w50 y+6 gSetAllHeroLevel, Set All
+
+
+	; BOX AREA
+	Gui, 1:Add, GroupBox, x+10 y6 r13 w120,
+
+	Gui, 1:Add, CheckBox, w90 xp+10 vAutoUltimates gUpdateFromGUI Checked0, Auto Ultimates
+
+	Gui, 1:Add, CheckBox, w50 vU1 gUpdateFromGUI Checked Section, Ult 1
+	Gui, 1:Add, CheckBox, vU2 gUpdateFromGUI Checked, Ult 2
+	Gui, 1:Add, CheckBox, vU3 gUpdateFromGUI Checked, Ult 3
+	Gui, 1:Add, CheckBox, vU4 gUpdateFromGUI Checked, Ult 4
+	Gui, 1:Add, CheckBox, vU5 gUpdateFromGUI Checked, Ult 5
+
+	Gui, 1:Add, Text, w50 xs ys+150, Rate (seconds):
+	Gui, 1:Add, DropDownList, w50 vUltRate gUpdateFromGUI, 1|5||10|15|30|60|300
+
+	Gui, 1:Add, Button, w50 y+6 gUnsetAllUlt, Clear All
+
+
+	Gui, 1:Add, CheckBox, x+5 ys vU6 gUpdateFromGUI Checked Section, Ult 6
+	Gui, 1:Add, CheckBox, vU7 gUpdateFromGUI Checked, Ult 7
+	Gui, 1:Add, CheckBox, vU8 gUpdateFromGUI Checked, Ult 8
+	Gui, 1:Add, CheckBox, vU9 gUpdateFromGUI Checked, Ult 9
+	Gui, 1:Add, CheckBox, vU10 gUpdateFromGUI Checked, Ult 10
+
+
+	Gui, 1:Add, Button, w50 xs ys+209 gSetAllUlt, Set All
+
+	; BOX AREA
+	Gui, 1:Add, GroupBox, x+10 y6 r13 w200,
+	Gui, 1:Add, CheckBox,  xp+10 vRepeatFormation gUpdateFromGUI Checked0, Repeat Formation
+
+	Gui, 1:Add, Text, Section , Formation:
+	Gui, 1:Add, DropDownList,  vRepeatFormationSelect gUpdateFromGUI, 1||2|3
+	Gui, 1:Add, Text, , Rate (Seconds):
+	Gui, 1:Add, DropDownList,  vRepeatFormationRate gUpdateFromGUI, 1|5||10|15|30|60|120
+
+	Gui, 1:Add, CheckBox, y+10 vSkipBossAnimation gUpdateFromGUI Checked0, Skip Level Animation (500ms)
+
+	Gui, 1:Add, CheckBox, y+10 vAutoClicker gUpdateFromGUI Checked0, AutoClicker (100ms)
+
+	Gui, 1:Add, CheckBox, y+10 vKillDistractions gUpdateFromGUI Checked0, Kill Distractions (80ms)
+
+
+	Gui, 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdateFromGUI Checked0, Auto Progress [ON] (every hour)
+
+
+	;trying to add progress bars for the firing of the events....
+	;Gui, 1:Add, Progress, y+10 w120 h20 -%PBS_SMOOTH% vProgPercent, 0
+
+
+	; BOX AREA
+	Gui, 1:Add, GroupBox, x+25 y6 r13 w150,
+	Gui, 1:Add, CheckBox, xp+10 w130  vIncrementFormations gdoIncrementFormation Checked0 Section, Increment Formations
+
+	Gui, 1:Add, Text, xs y+5, Formation 1 (Q)
+	Gui, 1:Add, DropDownList,  vIncrementFormationRateQ gUpdateFromGUI, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
+
+	Gui, 1:Add, Text, , Formation 2 (W)
+	Gui, 1:Add, DropDownList, vIncrementFormationRateW gUpdateFromGUI, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
+
+	Gui, 1:Add, Text, , Formation 3 (E)
+	Gui, 1:Add, DropDownList, vIncrementFormationRateE gUpdateFromGUI, 0||0.5|1.0|1.5|2.0|2.5|3.0|3.5|4.0|4.5|5.0|5.5|6.0|6.5|7.0|7.5|8.0|8.5
+
+
+	Gui, 1:Add, Text, xp y+15, (Set hours until each switch)
+	Gui, 1:Add, Text, xp y+10, AutoProgress Reccomended
+
+	Gui, 1:Add, edit, xs ys+216 w120 vidletime, 00:00:00
+
+	; BOX AREA
+	Gui, 1:Add, GroupBox, x+25 y6 r13 w140,
+
+	; Just hit the X ?+
+	; Gui, 1:Add, Button, xp+10 yp+20 gQuit, Quit
+
+	Gui, 1:Add, Button, xp+10 yp+20 w100 gSubPause, Pause
+	Gui, 1:Add, Button, w100 gsubResume, Resume
+	; Gui, 1:Add, Button, w100 gUpdoot, upDoot
+
+	if (vFormationChecks = 1) {
+		; Upgrqade and move these to a settings JSON or INI
+		Gui, 1:Add, Button, w100 y+6 gSetAllHeroLevel_Q, Set ToA Q
+		Gui, 1:Add, Button, w100 y+6 gSetAllHeroLevel_W, Set ToA W
+		Gui, 1:Add, Button, w100 y+6 gSetAllHeroLevel_E, Set ToA E
+	}
+
+
+	Gui, 1:Add, Text,, Pause script wit: `n [Win+P] `n [Pause/Break]`n
+
+	Gui, 1:Show
+
+	goSub UpdateFromGUI
+
+}
+
+
+
+Updoot() {
+	; test calling a function from GUI button
+	dooty:=2
+	mTip("upddoot %dooty% %A_TickCount%")
+}
+
+UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
+	Gui, 1:Submit, NoHide
 
 	; mTip("Starting Skill Upgrader Loop")
 
@@ -248,17 +286,16 @@ Update: ; do the work based on GUI controls calling this subroutine
 		SetTimer, doSkipBossAnimation, Off
 	}
 
-	; yes I know this is not here now.
 	if ( KillDistractions = 1 ) {
-		SetTimer, doKillDistractions, 60
+		SetTimer, doKillDistractions, 68
 	} else {
 		SetTimer, doKillDistractions, Off
 	}
 
-	if ( AutoClick = 1 ) {
-		SetTimer, doAutoClick, 100
+	if ( AutoClicker = 1 ) {
+		SetTimer, doAutoClicker, 100
 	} else {
-		SetTimer, doAutoClick, Off
+		SetTimer, doAutoClicker, Off
 	}
 
 
@@ -267,7 +304,7 @@ Update: ; do the work based on GUI controls calling this subroutine
 	;   gosub doIncrementFormation
 	; }
 
-	;end update function
+	;end UpdateFromGUI subroutine
 return
 
 doSkipBossAnimation:
@@ -276,7 +313,7 @@ doSkipBossAnimation:
 return
 
 
-doAutoClick:
+doAutoClicker:
 	if ( IsGameActive() ) {
 		ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
 	}
@@ -300,14 +337,29 @@ return
 
 doKillDistractions:
 	; mouse grid, 3 rows center screen spam clicks kill distractions - this works but takes cursor
-	ControlFocus,, Idle Champions
+	if ( IsGameActive() ) {
+		ControlFocus,, Idle Champions
 
-	MouseClick, left, 640, 125, 1 ; works but takes mouse
-	sleep 20
-	MouseClick, left, 640, 175, 1 ; works but takes mouse
-	sleep 20
-	MouseClick, left, 640, 225, 1 ; works but takes mouse
-	sleep 20
+		; MouseClick - works but takes mouse cursor
+		MouseClick, left, 640, 125, 1
+		sleep 17
+		MouseClick, left, 640, 175, 1
+		sleep 17
+		MouseClick, left, 640, 225, 1
+		sleep 17
+
+		; MouseClick, left, 1175, 300, 1 ; Also click to collect gold
+		; sleep 17
+
+		; MouseClick, left, 1175, 350, 1 ; Also click to collect gold
+		; sleep 17
+
+		; MouseClick, left, 1175, 450, 1 ; Also click to collect gold
+		; sleep 17
+
+		MouseClick, left, 640, 360, 1 ; click gems center
+		sleep 17
+	}
 return
 
 doRepeatFormation:
@@ -349,7 +401,7 @@ checkMasterTicks:
 	;T += A_TickCount/1000,Seconds
 
 	;FormatTime FormdT, %T%, HH:mm:ss
-	;GuiControl,, idletime, %FormdT%
+	;GuiControl, 1:, idletime, %FormdT%
 
 	; current time
 	;T = initialTick/1000, seconds
@@ -359,39 +411,27 @@ checkMasterTicks:
 	T += ElapsedTime/1000,Seconds
 
 	FormatTime FormdT, %T%, HH:mm:ss
-	GuiControl,, idletime, %FormdT%
+	GuiControl, 1:, idletime, %FormdT%
 
 	; test / debug output...
 
 	; mTip("elapsed %ElapsedTime%")
 
 	; testing condition block to see about changing the selected option of the dropdown
-	if ( IncrementFormationRateQ > 0 and ElapsedTime >= IncrementFormationRateQ * 1000  ) {
-		mTip("Test DropDownList update from formation Q")
-		;either we set the variable now, or we Gui, submut, noHide, I think setting the variable direcly is less intensive
-		IncrementFormationRateQ := 0
-		GuiControl, ChooseString, IncrementFormationRateQ, 0
-		;Gui, Submit, NoHide
-	}
-
-
 	if ( false AND IncrementFormationRateQ > 0 and ElapsedTime >= IncrementFormationRateQ * 1000  ) {
-		mtip("Test DropDownList update from formation Q bravo")
-
-		; can we do this more properly by setting the value and then refreshing the gui?
-		; try gui altSubmit?
-		; IncrementFormationRateQ:= 0
-		; Gui, Submit, NoHide
-
+		;set to false this is test-debug only
+		mTip("Test DropDownList update from formation Q")
+		;either we set the variable now, or we Gui-submit, noHide, I think setting the variable direcly is less intensive
+		IncrementFormationRateQ := 0
+		GuiControl, 1:ChooseString, IncrementFormationRateQ, 0
+		;Gui, 1:Submit, NoHide
 	}
 
 
 	if ( IncrementFormationRateQ > 0 and ElapsedTime >= IncrementFormationRateQ * 60 * 60 * 1000  ) {
 		mTip("I did the formation - Q")
 		IncrementFormationRateQ := 0
-		GuiControl, ChooseString, IncrementFormationRateQ, 0
-		ControlFocus,, Idle Champions
-
+		GuiControl, 1:ChooseString, IncrementFormationRateQ, 0
 		setFormation("q")
 		; gosub SetAllHeroLevel_Q
 	}
@@ -399,8 +439,7 @@ checkMasterTicks:
 	if ( IncrementFormationRateW > 0 and ElapsedTime >= IncrementFormationRateW * 60 * 60 * 1000  ) {
 		mTip("I did the formation - W")
 		IncrementFormationRateW := 0
-		GuiControl, ChooseString, IncrementFormationRateW, 0
-		ControlFocus,, Idle Champions
+		GuiControl, 1:ChooseString, IncrementFormationRateW, 0
 		setFormation("w")
 		; gosub SetAllHeroLevel_W
 	}
@@ -409,7 +448,7 @@ checkMasterTicks:
 		ControlFocus,, Idle Champions
 		mTip("I did the formation - E")
 		IncrementFormationRateE := 0
-		GuiControl, ChooseString, IncrementFormationRateE, 0
+		GuiControl, 1:ChooseString, IncrementFormationRateE, 0
 		setFormation("e")
 		; gosub SetAllHeroLevel_E
 	}
@@ -418,21 +457,20 @@ checkMasterTicks:
 		; this is where I turn off the main Checkbox if all formation rates have gone to zero
 		; mTip("Every formation rate 0 turn off.")
 		IncrementFormations := 0
-		GuiControl,, IncrementFormations, 0
-		Gui, Submit, NoHide
+		GuiControl, 1:, IncrementFormations, 0
+		Gui, 1:Submit, NoHide
 		SetTimer checkMasterTicks, off
 	}
 return
 
 doIncrementFormation:
-	Gui, Submit, NoHide
+	Gui, 1:Submit, NoHide
 	;turn it off if we only want it to set once and stop.
 
 	if (initialTick = 0) {
 		mTip("I will increment the formations every x hour(s).")
 		initialTick := A_TickCount
 	}
-
 
 	if (IncrementFormations = 1) {
 		SetTimer checkMasterTicks, 500
@@ -552,102 +590,109 @@ HeroLevel:
 return
 
 UnsetAllHeroLevel:
-	GuiControl,, C1, 0
-	GuiControl,, C2, 0
-	GuiControl,, C3, 0
-	GuiControl,, C4, 0
-	GuiControl,, C5, 0
-	GuiControl,, C6, 0
-	GuiControl,, C7, 0
-	GuiControl,, C8, 0
-	GuiControl,, C9, 0
-	GuiControl,, C10, 0
-	GuiControl,, C11, 0
-	GuiControl,, C12, 0
-	GuiControl,, ClickDmg, 0
-	Gui, Submit, NoHide
+	GuiControl, 1:, C1, 0
+	GuiControl, 1:, C2, 0
+	GuiControl, 1:, C3, 0
+	GuiControl, 1:, C4, 0
+	GuiControl, 1:, C5, 0
+	GuiControl, 1:, C6, 0
+	GuiControl, 1:, C7, 0
+	GuiControl, 1:, C8, 0
+	GuiControl, 1:, C9, 0
+	GuiControl, 1:, C10, 0
+	GuiControl, 1:, C11, 0
+	GuiControl, 1:, C12, 0
+	GuiControl, 1:, ClickDmg, 0
+	Gui, 1:Submit, NoHide
 return
 
 SetAllHeroLevel:
-	GuiControl,, C1, 1
-	GuiControl,, C2, 1
-	GuiControl,, C3, 1
-	GuiControl,, C4, 1
-	GuiControl,, C5, 1
-	GuiControl,, C6, 1
-	GuiControl,, C7, 1
-	GuiControl,, C8, 1
-	GuiControl,, C9, 1
-	GuiControl,, C10, 1
-	GuiControl,, C11, 1
-	GuiControl,, C12, 1
-	GuiControl,, ClickDmg, 1
-	Gui, Submit, NoHide
+	GuiControl, 1:, C1, 1
+	GuiControl, 1:, C2, 1
+	GuiControl, 1:, C3, 1
+	GuiControl, 1:, C4, 1
+	GuiControl, 1:, C5, 1
+	GuiControl, 1:, C6, 1
+	GuiControl, 1:, C7, 1
+	GuiControl, 1:, C8, 1
+	GuiControl, 1:, C9, 1
+	GuiControl, 1:, C10, 1
+	GuiControl, 1:, C11, 1
+	GuiControl, 1:, C12, 1
+	GuiControl, 1:, ClickDmg, 1
+	Gui, 1:Submit, NoHide
 return
 
 
+; Upgrqade and move these - SetAllHeroLevel subroutines - to a settings JSON or INI
 SetAllHeroLevel_Q: ; Leyline Custom TOA speed formation
 	gosub SetAllUlt
 	gosub SetAllHeroLevel
 
-	GuiControl,, U1, 0
+	GuiControl, 1:, U1, 0
 
-	GuiControl,, C3, 0
-	GuiControl,, C12, 0
+	GuiControl, 1:, C3, 0
+	GuiControl, 1:, C12, 0
 
-	GuiControl,, ClickDmg, 1
-	Gui, Submit, NoHide
+	GuiControl, 1:, ClickDmg, 1
+	Gui, 1:Submit, NoHide
 return
 
 SetAllHeroLevel_W: ; Leyline Custom TOA gold formation
 	gosub SetAllUlt
 	gosub SetAllHeroLevel
 
-	GuiControl,, C3, 0
-	GuiControl,, C12, 0
+	GuiControl, 1:, C3, 0
+	GuiControl, 1:, C12, 0
 
-	GuiControl,, ClickDmg, 0
-	Gui, Submit, NoHide
+	GuiControl, 1:, ClickDmg, 0
+	Gui, 1:Submit, NoHide
 return
 
 SetAllHeroLevel_E: ; Leyline Custom TOA push formation
 	gosub SetAllUlt
 	gosub SetAllHeroLevel
 
-	GuiControl,, C9, 0
-	GuiControl,, C12, 0
+	GuiControl, 1:, C9, 0
+	GuiControl, 1:, C12, 0
 
-	GuiControl,, ClickDmg, 0
-	Gui, Submit, NoHide
+	GuiControl, 1:, ClickDmg, 0
+	Gui, 1:Submit, NoHide
 return
 
 UnsetAllUlt:
-	GuiControl,, U1, 0
-	GuiControl,, U2, 0
-	GuiControl,, U3, 0
-	GuiControl,, U4, 0
-	GuiControl,, U5, 0
-	GuiControl,, U6, 0
-	GuiControl,, U7, 0
-	GuiControl,, U8, 0
-	GuiControl,, U9, 0
-	GuiControl,, U10, 0
-	Gui, Submit, NoHide
+	GuiControl, 1:, U1, 0
+	GuiControl, 1:, U2, 0
+	GuiControl, 1:, U3, 0
+	GuiControl, 1:, U4, 0
+	GuiControl, 1:, U5, 0
+	GuiControl, 1:, U6, 0
+	GuiControl, 1:, U7, 0
+	GuiControl, 1:, U8, 0
+	GuiControl, 1:, U9, 0
+	GuiControl, 1:, U10, 0
+	Gui, 1:Submit, NoHide
 return
 
 SetAllUlt:
-	GuiControl,, U1, 1
-	GuiControl,, U2, 1
-	GuiControl,, U3, 1
-	GuiControl,, U4, 1
-	GuiControl,, U5, 1
-	GuiControl,, U6, 1
-	GuiControl,, U7, 1
-	GuiControl,, U8, 1
-	GuiControl,, U9, 1
-	GuiControl,, U10, 1
-	Gui, Submit, NoHide
+	GuiControl, 1:, U1, 1
+	GuiControl, 1:, U2, 1
+	GuiControl, 1:, U3, 1
+	GuiControl, 1:, U4, 1
+	GuiControl, 1:, U5, 1
+	GuiControl, 1:, U6, 1
+	GuiControl, 1:, U7, 1
+	GuiControl, 1:, U8, 1
+	GuiControl, 1:, U9, 1
+	GuiControl, 1:, U10, 1
+	Gui, 1:Submit, NoHide
 return
+
+IsGameActive() {
+	WinGetTitle, title, A
+	return title == "Idle Champions"
+}
+
 
 SendControlKey(x) {
 	; if ( IsGameActive() ) { ; Protects firing when off the game, but also will not fire at all if the game was not fully focus
@@ -655,14 +700,10 @@ SendControlKey(x) {
 	if (A_TimeIdleKeyboard > 3000) {
 		ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
 	}
-	; send the key a second time if > 30s  no idea why this is here, removing.
-	; if (A_TimeIdleKeyboard > 30000) {
-	; 	ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
-	; }
 }
 
 
-; from zee / mike's script
+; from zee / mike's script - it is unused here, maybe we should put the controlFocus in the sendControlKey?
 DirectedInput(s) {
 	; ReleaseStuckKeys()
 	; SafetyCheck()
@@ -682,7 +723,6 @@ ControlFromPoint(X, Y, WinTitle="", WinText="", ByRef cX="", ByRef cY="", Exclud
 	if !(target_window := WinExist(WinTitle, WinText, ExcludeTitle, ExcludeText)) {
 		return false
 	}
-
 
 	VarSetCapacity(rect, 16)
 	DllCall("GetWindowRect","uint",target_window,"uint",&rect)
@@ -744,6 +784,7 @@ MAKELONG(LOWORD, HIWORD, Hex := False) {
    Return (Hex ? Format(Sign . "0x{:08X}", LONG) : (LONG * Sign))
 }
 
+; attempt a postMessage function that can send cursor and mouse clicks to unfocused window. (do not hijack cursor)
 ControlClick2(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
 	lparam := MakeLong(X, Y)
 	; lParam := X&0xFFFF | (Y & 0xFFFF) <<16 ; do it manually?
@@ -763,7 +804,7 @@ ControlClick2(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
 	PostMessage, 0x202, %wParam%, %lParam%,, ahk_id %hwnd% ; WM_LBUTTONUP
 }
 
-ControlClick2_orig(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
+ControlClick2_original(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="") {
 	hwnd:=ControlFromPoint(X, Y, WinTitle, WinText, cX, cY, ExcludeTitle, ExcludeText)
 	PostMessage, 0x200, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEMOVE
 	PostMessage, 0x2A1, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_MOUSEHOVER
@@ -776,23 +817,38 @@ ControlClick2_orig(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeText="
 ;return
 
 ; CoordMode, mouse, screen ; does NOT use active window coords
-^numpad0:: ; Ctrl + left hotkey
+^numpad7:: ; hotkey
 	SetTimer, doClickTest, off
 Return
-^numpad1:: ; Ctrl + right hotkey
+^numpad8:: ; hotkey
 	SetTimer, doClickTest, 60
 Return
 
-;^up:: ;control up hotkey
+;^numpad9:: ; hotkey
+;	testing the setFormation function
 ;	setFormation("q")
 ;return
 
-NumpadSub:: ; for quick reloads during development
+^NumpadSub:: ; hotkey CTRL-Numpad-(minus) for quick reloads during development
 	Reload
 return
 
-Pause::Pause  ; The Pause/Break key.
-#p::Pause  ; Win+P
+subPause:
+	mTip("Script Paused")
+	Pause
+return
+
+subResume:
+	mTip("Script Resumed")
+	Pause, 0
+return
+
+; hotkey Pause/Break OR Win+P.
+#P::
+Pause::
+	Pause
+return
+
 ;=::Pause  ; placeholder for an easy key during mobile remote desktop, or steam link play.
 
 
