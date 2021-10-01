@@ -3,21 +3,24 @@
 ; from striderx2048 210614
 ; edited retaki
 ;
-; Current Version: 1.5.7
+; Current Version: 1.5.8
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
 ;
 ;	Idle Champions of the Forgotten Realms AHK Macro Scripts
 ;	The purpose of this macro script is to automate levelups and simple tasks in the game: Idle Champions of the forgotton Realms
-;	This script requires AutohotKey (AHK) to run.
-;	This script was developed and tested on AHK Version 1.1.33.10 https://www.autohotkey.com
-;	This script works by sending key or mouse clicks to the game client window, it does not read or edit memory.
+;		Requires AutohotKey (AHK) to run.
+;		Developed and tested on AHK Version 1.1.33.10 https://www.autohotkey.com
+;		Works by sending key or mouse clicks to the game client window, it does not read or edit memory.
+;		Developed and defaults for screen 1280x720
 ;
-;	Helpful tips
+;	Helpful tips:
 ;	Use the PAUSE / BREAK key on your keyboard to pause the script.
 ;		example: If you set your rate to 1 second or turn on a clicking feature,
 ;		you may have a hard time changing settings because the click / key spam is focuses back to IC
+;	The script has a 3s delay for typing safety, if you have pressed a key (anywhere in your PC) recently, you may think the script did not fire
+;		correct: it skipped the command and it will pick itself back up in the next loop (after 3s that is)
 ;	Increment Formations:
 ;		if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
 ;		you can "increment" the formations in any order by setting them to a lower Time than another.
@@ -33,7 +36,6 @@
 ;		add gui boxes and sections for better gui positioning
 ;		fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
 ;		added game feature to change formations at certain time elapsed since setting checked off
-;
 ;	1.5.1
 ;		Fixed Increment Formation 3 (E)
 ;	1.5.2
@@ -42,21 +44,20 @@
 ;	1.5.3
 ;		script version increment forgotten, still says 1.5.2
 ;		in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
-;;	1.5.4
+;	1.5.4
 ;		Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
 ;		This old code had been causing issues with double levelling, and also hindering AutoProgress
 ;		TIP: skip boss animations is just press right, this will hinder the auto progress theory*
 ;			*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
-;;	1.5.5
+;	1.5.5
 ;		reintroduced kill distractions, WARNING this will hijack ytour mouse, remember the Pause key
 ;		reformatted the GUI
 ;			removed the word Seat all the time, the numbers should be self explanatory
 ;			Made the columns narrower
 ;			Adopted the left=cancel right=ok format for Clear All and Set All Buttons (they are backwards)
 ;		added test code to develop / test controlClick2 hopefully for sending background clicks
-;	fix - Change formation may work if the party is tanking.
+;		* fix - Change formation may work if the party is tanking.
 ;		Added setFormation - go back 1 level, change and then resume autoprogress or right once depending on resume autoprogress checkbox.
-;
 ;	1.5.6
 ;		Added center click to kill distractions to grab gem bags.  Also adds a click on the field, do not need advance boss if you use this(?)
 ;	1.5.7
@@ -66,6 +67,14 @@
 ;		Made makeGui function so the code is not sitting in the main area,
 ;		other code cleanups and updates, some dev code sitting around too.
 ;
+;	1.5.8
+;		Parameterize all client window target vie new variables: game_title, game_exe, game_ahk_id
+;		#ifWinExist does not accept variable parameters, upgrade to groupAdd
+;
+;	1.5.9 - Placeholder
+; 	1.5.9 - Todo
+;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
+;
 ;	todo 2021-09-23
 ;		add rate / time for autoprogress to repeat on
 ;		add a checkbox / setting to allow NumpadSub or choose a hotkey to reload the script?
@@ -73,6 +82,8 @@
 ;		Add instructions / clarifications
 ;
 ;		Will this help? Add a 3250ms delay when GUI is checked before starting key send timers - because sendControlKey ignore all input for 3s anyway....
+;
+;	TODO: will add Priority Click Damage if block in HeroLevel
 ;
 ;	investigate: see if this is appropriate (does it help?)
 ;		https://autohotkey.com/board/topic/11347-control-key-sticks-sometimes-since-i-added-blind/#entry73409
@@ -84,8 +95,14 @@
 ;		  Send {something}
 ;		  return
 
+global game_Title := "Idle Champions"
+global game_Exe := "IdleDragons.exe"
+global game_ahk_id := GetGameAhkId()
+
+GroupAdd, myGroup , %game_title% ; game_Title
+
 #SingleInstance force
-#IfWinExist ahk_exe IdleDragons.exe
+#IfWinExist ahk_group myGroup
 #MaxThreadsPerHotkey 10
 
 CoordMode, Mouse, Client
@@ -308,37 +325,37 @@ UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
 return
 
 doSkipBossAnimation:
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_Title%
 	SendControlKey("right")
 return
 
 
 doAutoClicker:
 	if ( IsGameActive() ) {
-		ControlClick, x380 y265, Idle Champions,, LEFT, 1, NA ;
+		ControlClick, x380 y265, %game_Title%,, LEFT, 1, NA ;
 	}
 return
 
 doClickTest:
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 	; click on familiar box to see click flashes (debug)
 	; MouseMove, 880, 410, 4
-	; ControlClick, x880 y410, Idle Champions,, LEFT, 1, x880 y410 ;
+	; ControlClick, x880 y410, %game_title%,, LEFT, 1, x880 y410 ;
 
 	; SendMessage, WM_SETCURSOR, [wParam, lParam, Control, WinTitle, WinText, ExcludeTitle, ExcludeText, Timeout]
-	; WinGetPos , , , , , Idle Champions
+	; WinGetPos , , , , , %game_title%
 	; SetControlDelay -1
 
 	; ControlMouseMove(x, y, c%A_Index%, "ahk_id " w%A_Index%, "", "L K")
-	;ControlClick, x880 y410, Idle Champions,, LEFT, 1, NA ;
+	;ControlClick, x880 y410, %game_title%,, LEFT, 1, NA ;
 
-	ControlClick2(880, 410, "Idle Champions") ;
+	ControlClick2(880, 410, game_title) ;
 return
 
 doKillDistractions:
 	; mouse grid, 3 rows center screen spam clicks kill distractions - this works but takes cursor
 	if ( IsGameActive() ) {
-		ControlFocus,, Idle Champions
+		ControlFocus,, %game_title% ahk_exe %game_Exe%
 
 		; MouseClick - works but takes mouse cursor
 		MouseClick, left, 640, 125, 1
@@ -363,7 +380,7 @@ doKillDistractions:
 return
 
 doRepeatFormation:
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 
 	if ( RepeatFormationSelect = 1 ) {
 		SendControlKey("q")
@@ -445,7 +462,7 @@ checkMasterTicks:
 	}
 
 	if ( IncrementFormationRateE > 0 and ElapsedTime >= IncrementFormationRateE * 60 * 60 * 1000  ) {
-		ControlFocus,, Idle Champions
+		ControlFocus,, %game_title% ahk_exe %game_Exe%
 		mTip("I did the formation - E")
 		IncrementFormationRateE := 0
 		GuiControl, 1:ChooseString, IncrementFormationRateE, 0
@@ -482,7 +499,7 @@ doIncrementFormation:
 return
 
 setFormation(sFormation) {
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 
 	sleep 3250 ; for testing make sure noone was typing.
 	SendControlKey("left")
@@ -497,7 +514,7 @@ setFormation(sFormation) {
 
 doAutoProgress:
 	;Turns off autoprogress with left key, then G to resume
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 	SendControlKey("Left")
 	sleep 750
 	SendControlKey("g")
@@ -505,7 +522,7 @@ return
 
 
 doUltimates:
-	ControlFocus,, Idle Champions
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 	Ults := [U1, U2, U3, U4, U5, U6, U7, U8, U9, U10]
 	if ( U1 = 1) {
 		SendControlKey("1")
@@ -541,7 +558,7 @@ doUltimates:
 return
 
 HeroLevel:
-	ControlFocus,, Idle Champions ahk_exe IdleDragons.exe
+	ControlFocus,, %game_title% ahk_exe %game_Exe%
 	champs := [C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12]
 	if ( champs[PriorityChamp] = 1) {
 		x := Format("F{1}", PriorityChamp)
@@ -688,17 +705,26 @@ SetAllUlt:
 	Gui, 1:Submit, NoHide
 return
 
+
 IsGameActive() {
-	WinGetTitle, title, A
-	return title == "Idle Champions"
+	WinGetTitle, title, A ; fetch the title of the active windo
+	return title == game_Title ; compare the fecthed title to our game_title
 }
 
+
+GetGameAhkId() {
+	return WinExist("ahk_exe" . game_Exe)
+}
+
+GetGameAhkIdByGroup() {
+	return WinExist("ahk_group myGroup")
+}
 
 SendControlKey(x) {
 	; if ( IsGameActive() ) { ; Protects firing when off the game, but also will not fire at all if the game was not fully focus
 	; }
 	if (A_TimeIdleKeyboard > 3000) {
-		ControlSend,, {%x%}, Idle Champions ahk_exe IdleDragons.exe
+		ControlSend,, {%x%}, %game_title% ahk_exe %game_Exe%
 	}
 }
 
@@ -707,8 +733,8 @@ SendControlKey(x) {
 DirectedInput(s) {
 	; ReleaseStuckKeys()
 	; SafetyCheck()
-	ControlFocus,, ahk_exe IdleDragons.exe
-	ControlSend,, {Blind}%s%, ahk_exe IdleDragons.exe
+	ControlFocus,, ahk_exe %game_Exe%
+	ControlSend,, {Blind}%s%, ahk_exe %game_Exe%
 	Sleep, 25  ; Sleep for 25 sec formerly ScriptSpeed global, not used elsewhere.
 }
 
