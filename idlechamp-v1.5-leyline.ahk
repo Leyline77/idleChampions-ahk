@@ -3,7 +3,7 @@
 ; from striderx2048 210614
 ; edited retaki
 ;
-; Current Version: 1.5.8
+; Current Version: 1.5.91
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
@@ -71,9 +71,12 @@
 ;		Parameterize all client window target vie new variables: game_title, game_exe, game_ahk_id
 ;		#ifWinExist does not accept variable parameters, upgrade to groupAdd
 ;
-;	1.5.9 - Placeholder
+;	1.5.91 - Added L hotkey for pause / resume so that when using steam link from a mobile phone there was a compatible key with it's keyboard.
+;
+;	1.5.92 - Placeholder
 ; 	1.5.9 - Todo
 ;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
+;		We may be able to, we may should remove control focus for key things since sendControlKey might be capable without it
 ;
 ;	todo 2021-09-23
 ;		add rate / time for autoprogress to repeat on
@@ -115,6 +118,8 @@ global initialTick := 0
 global IdleTime := 0
 global vFormationChecks := 0
 
+
+global aubsurdPauseKey := 0
 
 makeGui()
 ;end of main code area
@@ -246,6 +251,8 @@ makeGui() {
 
 	Gui, 1:Add, Text,, Pause script wit: `n [Win+P] `n [Pause/Break]`n
 
+	Gui, 1:Add, CheckBox, vaubsurdPauseKey gUpdateFromGUI Checked0, Allow L pause
+
 	Gui, 1:Show
 
 	goSub UpdateFromGUI
@@ -374,6 +381,10 @@ doKillDistractions:
 		; MouseClick, left, 1175, 450, 1 ; Also click to collect gold
 		; sleep 17
 
+
+		; if ( SkipBossAnimation != 1 ) {
+		; 	naw, leave it in; it adds dps on the field :P
+		; }
 		MouseClick, left, 640, 360, 1 ; click gems center
 		sleep 17
 	}
@@ -855,7 +866,7 @@ Return
 ;	setFormation("q")
 ;return
 
-^NumpadSub:: ; hotkey CTRL-Numpad-(minus) for quick reloads during development
+>^NumpadSub:: ; hotkey (rightCTRL) + Numpad + - (minus) for quick reloads during development
 	Reload
 return
 
@@ -872,7 +883,16 @@ return
 ; hotkey Pause/Break OR Win+P.
 #P::
 Pause::
+>!p:: ; (rightAlt) + p
 	Pause
+return
+
+l::	; yes I did this, so that paying from steam streaming you can pause with "L"
+	if (aubsurdPauseKey = 1) {
+		Pause
+	} else {
+		send, l
+	}
 return
 
 ;=::Pause  ; placeholder for an easy key during mobile remote desktop, or steam link play.
