@@ -4,10 +4,10 @@
 # idleChampions-ahk
 Idle Champions of the Forgotten Realms AHK Macro Scripts
 
-# The purpose of this macro script is to automate levelups on Idle Champions of the forgotton Realms
-  - This is useful if you want to click less, and especially useful if you would like to run the game AFK and still have things leveled up.
-  - It works as if you placed a familiar on the item/slot.
-  - There are more advanced tips and tricks in the script comments.
+### The purpose of this macro script is to automate levelups on Idle Champions of the forgotton Realms
+    - This is useful if you want to click less, and especially useful if you would like to run the game AFK and still have things leveled up.
+    - It works as if you placed a familiar on the item/slot.
+    - There are more advanced tips and tricks in the script comments.
 
  This script requires AutohotKey (AHK) to run.
 
