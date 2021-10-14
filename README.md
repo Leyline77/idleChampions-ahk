@@ -5,12 +5,14 @@
 Idle Champions of the Forgotten Realms AHK Macro Scripts
 
  The purpose of this macro script is to automate levelups on Idle Champions of the forgotton Realms
- 
+
  This script requires AutohotKey (AHK) to run.
- 
+
  It was developed and tested on Version 1.1.33.10 https://www.autohotkey.com
 
  Please see the comments in the top of the script, they may stay more up to date than this readme file
+
+ This script adopted and maintained for the benefit of the gaming community.  It is free to use for non commercial purposes.
 
 # Contributors
 - Original Author: Abydos, Fritz
@@ -18,25 +20,20 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
 - from striderx2048 210614
 - edited retaki
 - edited Leyline (discord: Swamp Fox II) 2021-09-23
-   - fix auto progress - was only pressing G this would turn it off for 30 mins, turn it on for 30 mins.  now it will break progress with {left} and then g to continue
-   - Clarified some GUI options, such as repeat Formation
-   - Simplified GUI with Rate in Seconds or Minutes or Hours as appropriate instead of milliseconds
-   - Fixed variables and labels (subroutines) having the same name vAutoUlt sets AutoUlt & AutoUlt as a method...  Separated into VAutoUltimates and doAutoUltimates
-   - added temporary tooltips to show setting effects
-   - add gui boxes and sections for better gui positioning
-   - fix bug where setting or clearing all level/ult checks did not also update the pointers (it would continue with old settings until gui submit runs)
-   - added game feature to change formations at certain time elapsed since setting checked off
 
 # Helpful tips
-
-- if you set your rate to 1 second, and then you have a hard time changing settings because the spamming is focusing out,
-- use the PAUSE / BREAK key on your keyboard to pause the script.
-- if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
-- you can "increment" the formations in any order by setting them to a lower Time than another.
-- you can pick just one formation to increment by only setting a time for that formation.
-
-# todo 2021-09-23
-
-- add rate / time for autoprogress to repeat on
-- add a checkbox / setting to allow NumpadSub or choose a hotkey to reload the script?
-- add a checkbox / setting that chooses a different hotkey for pause / unpause
+ - 	Use the PAUSE / BREAK key on your keyboard to pause the script.
+ - 		example: If you set your rate to 1 second or turn on a clicking feature,
+ - 		you may have a hard time changing settings because the click / key spam is focuses back to IC
+ - 	The script has a 3s delay for typing safety, if you have pressed a key (anywhere in your PC) recently, you may think the script did not fire
+ - 		correct: it skipped the command and it will pick itself back up in the next loop (after 3s that is)
+ - 	Increment Formations:
+ - 		if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
+ - 		you can "increment" the formations in any order by setting them to a lower Time than another.
+ - 		you can pick just one formation to increment by only setting a time for that formation.
+ - 	Repeat Formation:
+ - 		This is for one or more special missions where your party members are kicked out and you want to reload them (it was here when I adopted the script)
+ -	Allow L Pause
+ - 		This is a setting to allow pause/unpause of the script while remoting in from a limited mobile keyboard (steam link etc)
+ - 	Quick Settings
+ - 		These are Settings instilled by me for how I run my quick Gem Farm, I'm the dev, I get treats :)
