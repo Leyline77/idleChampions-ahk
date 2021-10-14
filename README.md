@@ -1,7 +1,6 @@
-# Standard Readme
+# idleChampions-ahk
 [![standard-readme compliant](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
-# idleChampions-ahk
 Idle Champions of the Forgotten Realms AHK Macro Scripts
 
 ### The purpose of this macro script is to automate levelups on Idle Champions of the forgotton Realms
