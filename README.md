@@ -9,7 +9,9 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
    - There are more advanced tips and tricks in the script comments.
 
  This script requires AutohotKey (AHK) to run.
+ 
  It was developed and tested on AutohotKey version 1.1.33.10 https://www.autohotkey.com
+ 
  Please see the comments in the top of the script, they may stay more up to date than this readme file
 
  This script adopted and maintained for the benefit of the gaming community.  It is free to use for non commercial purposes.
