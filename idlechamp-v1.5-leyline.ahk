@@ -2,11 +2,14 @@
 ; orig filename: idlechamp-v1.4.ahk
 ; from striderx2048 210614
 ; edited retaki
+; credit to https://github.com/mikebaldi/Idle-Champions with courtesy permission to use
 ;
-; Current Version: 1.5.91
+; Current Version: 1.6.0
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
+;
+;	This script adopted and maintained for the benefit of the gaming community.  It is free to use for non commercial purposes.
 ;
 ;	Idle Champions of the Forgotten Realms AHK Macro Scripts
 ;	The purpose of this macro script is to automate levelups and simple tasks in the game: Idle Champions of the forgotton Realms
@@ -73,8 +76,18 @@
 ;
 ;	1.5.91 - Added L hotkey for pause / resume so that when using steam link from a mobile phone there was a compatible key with it's keyboard.
 ;
-;	1.5.92 - Placeholder
-; 	1.5.9 - Todo
+;	1.6.0 - Added memory checking capabilities -  https://github.com/mikebaldi/Idle-Champions
+;		These features now read the current zone from game memory and will attempt to load Havilar, Imp, Party when modron resets to zone 1.
+;		If the game client updates and the memory pointers fail, all other features from 1.5.x should work the same, just avoid using the Gem Farm Setup if it causes issues
+;		(It should fail gracefully and skip the process, but you know... computers...)
+;		If you see cannot load json.ahk or other includes do this:
+;			Make a shortcut to load AHK and the script:
+; 			[Target] 	D:\Dropbox\_tools\AutoHotkey.v1.1.33.10\AutoHotkeyU64.exe idlechamp-v1.5-leyline.ahk
+;			[Start In Directory] {the same as the script location} ie: D:\Dropbox\Games\IdleChampions\idleChampions-ahk\
+;
+;	1.6.1 - Placeholder
+;
+; 	1.5.9+ - Todo - I think this was covered in 1.5.8 I will review
 ;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
 ;		We may be able to, we may should remove control focus for key things since sendControlKey might be capable without it
 ;
@@ -102,6 +115,26 @@ global game_Title := "Idle Champions"
 global game_Exe := "IdleDragons.exe"
 global game_ahk_id := GetGameAhkId()
 
+
+;class and methods for parsing JSON (User details sent back from a server call)
+#include json.ahk
+
+;wrapper with memory reading functions sourced from: https://github.com/Kalamity/classMemory
+#include classMemory.ahk
+
+;Check if you have installed the class correctly.
+if (_ClassMemory.__Class != "_ClassMemory") {
+	msgbox class memory not correctly installed. Or the (global class) variable "_ClassMemory" has been overwritten
+	ExitApp
+}
+
+;pointer addresses and offsets
+#include IC_MemoryFunctions.ahk
+
+;server call functions and variables Included after GUI so chest tabs maybe non optimal way of doing it
+#include IC_ServerCallFunctions.ahk
+
+
 GroupAdd, myGroup , %game_title% ; game_Title
 
 #SingleInstance force
@@ -119,12 +152,19 @@ global IdleTime := 0
 global vFormationChecks := 0
 
 
-global aubsurdPauseKey := 0
+global absurdPauseKey := 0
+
+global gCheckRestartLevelOne := 0
+
+global loadHavilarImp:=0
+
+OpenProcess()
+ModuleBaseAddress()
 
 makeGui()
+
 ;end of main code area
 return
-
 
 makeGui() {
 
@@ -155,7 +195,6 @@ makeGui() {
 	Gui, 1:Add, CheckBox, vC10 gUpdateFromGUI Checked, 10
 	Gui, 1:Add, CheckBox, vC11 gUpdateFromGUI Checked, 11
 	Gui, 1:Add, CheckBox, vC12 gUpdateFromGUI Checked, 12
-
 
 	Gui, 1:Add, Text, w50 xs ys+150, Priority Seat:
 	Gui, 1:Add, DropDownList, w50 vPriorityChamp gUpdateFromGUI, 1|2|3|4|5|6||7|8|9|10|11|12|
@@ -190,30 +229,32 @@ makeGui() {
 	Gui, 1:Add, Button, w50 xs ys+209 gSetAllUlt, Set All
 
 	; BOX AREA
-	Gui, 1:Add, GroupBox, x+10 y6 r13 w200,
-	Gui, 1:Add, CheckBox,  xp+10 vRepeatFormation gUpdateFromGUI Checked0, Repeat Formation
+	Gui, 1:Add, GroupBox, x+10 y6 r13 w190,
+	Gui, 1:Add, CheckBox, xp+10 vRepeatFormation gUpdateFromGUI Checked0, Repeat Formation
 
 	Gui, 1:Add, Text, Section , Formation:
-	Gui, 1:Add, DropDownList,  vRepeatFormationSelect gUpdateFromGUI, 1||2|3
+	Gui, 1:Add, DropDownList, vRepeatFormationSelect gUpdateFromGUI, 1||2|3
 	Gui, 1:Add, Text, , Rate (Seconds):
-	Gui, 1:Add, DropDownList,  vRepeatFormationRate gUpdateFromGUI, 1|5||10|15|30|60|120
+	Gui, 1:Add, DropDownList, vRepeatFormationRate gUpdateFromGUI, 1|5||10|15|30|60|120
 
-	Gui, 1:Add, CheckBox, y+10 vSkipBossAnimation gUpdateFromGUI Checked0, Skip Level Animation (500ms)
+	Gui, 1:Add, CheckBox, vSkipBossAnimation gUpdateFromGUI Checked0, Skip Level Animation (500ms)
 
-	Gui, 1:Add, CheckBox, y+10 vAutoClicker gUpdateFromGUI Checked0, AutoClicker (100ms)
+	Gui, 1:Add, CheckBox, vAutoClicker gUpdateFromGUI Checked0, AutoClicker (100ms)
 
-	Gui, 1:Add, CheckBox, y+10 vKillDistractions gUpdateFromGUI Checked0, Kill Distractions (80ms)
+	Gui, 1:Add, CheckBox, vKillDistractions gUpdateFromGUI Checked0, Kill Distractions (80ms)
 
+	Gui, 1:Add, CheckBox, vAutoProgress gUpdateFromGUI Checked0, Auto Progress [ON] (every hour)
 
-	Gui, 1:Add, CheckBox, xs ys+170 vAutoProgress gUpdateFromGUI Checked0, Auto Progress [ON] (every hour)
+	Gui, 1:Add, CheckBox, vloadHavilarImp gUpdateFromGUI Checked0, Load Havilar Imp
 
+	Gui, 1:Add, CheckBox, w180 vLevelUpOnReset gUpdateFromGUI Checked0, Quick Level Ups on Reset
 
 	;trying to add progress bars for the firing of the events....
 	;Gui, 1:Add, Progress, y+10 w120 h20 -%PBS_SMOOTH% vProgPercent, 0
 
 
 	; BOX AREA
-	Gui, 1:Add, GroupBox, x+25 y6 r13 w150,
+	Gui, 1:Add, GroupBox, x+5 y6 r13 w150,
 	Gui, 1:Add, CheckBox, xp+10 w130  vIncrementFormations gdoIncrementFormation Checked0 Section, Increment Formations
 
 	Gui, 1:Add, Text, xs y+5, Formation 1 (Q)
@@ -248,10 +289,13 @@ makeGui() {
 		Gui, 1:Add, Button, w100 y+6 gSetAllHeroLevel_E, Set ToA E
 	}
 
+	Gui, 1:Add, Button, w100 y+6 gSetAllHeroLevel_GemFarm, Quick Settings
 
-	Gui, 1:Add, Text,, Pause script wit: `n [Win+P] `n [Pause/Break]`n
 
-	Gui, 1:Add, CheckBox, vaubsurdPauseKey gUpdateFromGUI Checked0, Allow L pause
+
+	Gui, 1:Add, Text,, Pause script with: `n [Win+P] `n [Pause/Break]`n
+
+	Gui, 1:Add, CheckBox, vabsurdPauseKey gUpdateFromGUI Checked0, Allow L pause
 
 	Gui, 1:Show
 
@@ -316,6 +360,12 @@ UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
 		SetTimer, doKillDistractions, Off
 	}
 
+	if ( LevelUpOnReset = 1 ) {
+		SetTimer, doLevelUpOnReset, 1000
+	} else {
+		SetTimer, doLevelUpOnReset, Off
+	}
+
 	if ( AutoClicker = 1 ) {
 		SetTimer, doAutoClicker, 100
 	} else {
@@ -330,6 +380,7 @@ UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
 
 	;end UpdateFromGUI subroutine
 return
+
 
 doSkipBossAnimation:
 	ControlFocus,, %game_Title%
@@ -422,7 +473,7 @@ checkMasterTicks:
 		return
 	}
 
-	ElapsedTime := A_TickCount - initialTick
+	ElapsedTime := UpdateElapsedTime(initialTick)
 
 	; time since boot
 	;T = %A_YYYY%%A_MM%%A_DD%%A_Hour%%A_Min%%A_Sec%
@@ -568,50 +619,102 @@ doUltimates:
 
 return
 
+
+doLevelUpOnReset:
+
+	gLevel_Number := ReadCurrentZone(1)
+
+	; Hack for now until I can make it more graceful,   Set Havi Ultimate
+	if (gCheckRestartLevelOne = 0 AND gLevel_Number > 1) {
+		; set this up so that we will load group one time next load.
+		mTip("Toggle Level Watch")
+		gCheckRestartLevelOne := 1
+	} else if (gLevel_Number = 1 and gCheckRestartLevelOne = 1) {
+		gCheckRestartLevelOne := 0
+
+		SetKeyDelay 20,20
+		mTip("Level 1 restart Detected, Leveling Group in 5s")
+		sleep 5000
+
+		if ( C10 = 1 OR loadHavilarImp = 1 ) {
+			mTip("Load Havilar")
+			DirectedInput("{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}")
+
+			if (loadHavilarImp = 1) {
+				sleep 250
+				mTip("Load Imp")
+				DirectedInput("1")
+			}
+		}
+
+		mTip("Load Group")
+
+		if ( C1 = 1 ) {
+			DirectedInput("{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}")
+		}
+		if ( C6 = 1 ) {
+			DirectedInput("{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}")
+		}
+		if ( C8 = 1 ) {
+			DirectedInput("{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}")
+		}
+		if ( C4 = 1 ) {
+			DirectedInput("{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}")
+		}
+		if ( ClickDmg = 1 ) {
+			DirectedInput("{Ctrl down}``{Ctrl up}")
+		}
+
+		SetKeyDelay -1,-1
+	}
+
+return
+
 HeroLevel:
 	ControlFocus,, %game_title% ahk_exe %game_Exe%
+
 	champs := [C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12]
-	if ( champs[PriorityChamp] = 1) {
+	if ( champs[PriorityChamp] = 1 ) {
 		x := Format("F{1}", PriorityChamp)
 		SendControlKey(x)
 	}
-	if ( C12 = 1) {
+	if ( C12 = 1 ) {
 		SendControlKey("F12")
 	}
-	if ( C11 = 1) {
+	if ( C11 = 1 ) {
 		SendControlKey("F11")
 	}
-	if ( C10 = 1) {
+	if ( C10 = 1 ) {
 		SendControlKey("F10")
 	}
-	if ( C9 = 1) {
+	if ( C9 = 1 ) {
 		SendControlKey("F9")
 	}
-	if ( C8 = 1) {
+	if ( C8 = 1 ) {
 		SendControlKey("F8")
 	}
-	if ( C7 = 1) {
+	if ( C7 = 1 ) {
 		SendControlKey("F7")
 	}
-	if ( C6 = 1) {
+	if ( C6 = 1 ) {
 		SendControlKey("F6")
 	}
-	if ( C5 = 1) {
+	if ( C5 = 1 ) {
 		SendControlKey("F5")
 	}
-	if ( C4 = 1) {
+	if ( C4 = 1 ) {
 		SendControlKey("F4")
 	}
-	if ( C3 = 1) {
+	if ( C3 = 1 ) {
 		SendControlKey("F3")
 	}
-	if ( C2 = 1) {
+	if ( C2 = 1 ) {
 		SendControlKey("F2")
 	}
-	if ( C1 = 1) {
+	if ( C1 = 1 ) {
 		SendControlKey("F1")
 	}
-	if ( ClickDmg = 1) {
+	if ( ClickDmg = 1 ) {
 		SendControlKey("``")
 	}
 
@@ -653,11 +756,50 @@ return
 
 
 ; Upgrqade and move these - SetAllHeroLevel subroutines - to a settings JSON or INI
+
+
+SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
+	gosub SetAllUlt
+	gosub UnsetAllHeroLevel
+
+	GuiControl, 1:, U1, 0 ; Deekin off
+	GuiControl, 1:, U5, 0 ; Havilar off
+
+	GuiControl, 1:, C1, 1
+	GuiControl, 1:, C4, 1
+	GuiControl, 1:, C6, 1
+	GuiControl, 1:, C8, 1
+
+	GuiControl, 1:, loadHavilarImp, 1
+
+	GuiControl, 1:, AutoLevel, 1
+
+	GuiControl, 1:, AutoUltimates, 1
+
+	; LevelingRate := 1
+	; GuiControl, 1:ChooseString, LevelingRate, 1
+
+	SkipBossAnimation := 1
+	GuiControl, 1:, SkipBossAnimation, 1
+
+	LevelUpOnReset := 1
+	GuiControl, 1:, LevelUpOnReset, 1
+
+	GuiControl, 1:, ClickDmg, 1
+	Gui, 1:Submit, NoHide
+
+	gCheckRestartLevelOne := 1
+
+	gosub UpdateFromGUI ; start clicking
+
+return
+
+
 SetAllHeroLevel_Q: ; Leyline Custom TOA speed formation
 	gosub SetAllUlt
 	gosub SetAllHeroLevel
 
-	GuiControl, 1:, U1, 0
+	GuiControl, 1:, U1, 0 ; deekin off
 
 	GuiControl, 1:, C3, 0
 	GuiControl, 1:, C12, 0
@@ -740,13 +882,19 @@ SendControlKey(x) {
 }
 
 
-; from zee / mike's script - it is unused here, maybe we should put the controlFocus in the sendControlKey?
+; from zee / mike's script
 DirectedInput(s) {
 	; ReleaseStuckKeys()
 	; SafetyCheck()
 	ControlFocus,, ahk_exe %game_Exe%
 	ControlSend,, {Blind}%s%, ahk_exe %game_Exe%
 	Sleep, 25  ; Sleep for 25 sec formerly ScriptSpeed global, not used elsewhere.
+}
+
+UpdateElapsedTime(StartTime) {
+	ElapsedTime := A_TickCount - StartTime
+	GuiControl, MyWindow:, ElapsedTimeID, % ElapsedTime
+	return ElapsedTime
 }
 
 
@@ -815,10 +963,10 @@ EnumChildFindPoint(aWnd, lParam) {
 }
 
 MAKELONG(LOWORD, HIWORD, Hex := False) {
-   ; WORD = 2 bytes = 16 bits
-   LONG := (LOWORD & 0xFFFF) | ((HIWORD & 0xFFFF) << 16)
-   Sign := (LONG & 0x80000000) ? (Hex ? "-" : -1) : (Hex ? "" : 1)
-   Return (Hex ? Format(Sign . "0x{:08X}", LONG) : (LONG * Sign))
+	; WORD = 2 bytes = 16 bits
+	LONG := (LOWORD & 0xFFFF) | ((HIWORD & 0xFFFF) << 16)
+	Sign := (LONG & 0x80000000) ? (Hex ? "-" : -1) : (Hex ? "" : 1)
+	Return (Hex ? Format(Sign . "0x{:08X}", LONG) : (LONG * Sign))
 }
 
 ; attempt a postMessage function that can send cursor and mouse clicks to unfocused window. (do not hijack cursor)
@@ -861,24 +1009,45 @@ Return
 	SetTimer, doClickTest, 60
 Return
 
-;^numpad9:: ; hotkey
-;	testing the setFormation function
-;	setFormation("q")
-;return
+^numpad9:: ; hotkey
+	; This is my debug testing area, move along.
+	; OpenProcess()
+	; ModuleBaseAddress()
+	; gCheckRestartLevelOne := 1
+
+	if (ReadChampBenchedByID(0,, 58) = 1) {
+		mTip("Couldn't find Briv in [Q] formation. Check saved formations. Ending Gem Farm.")
+	;    Return, 1
+	}
+
+	if (ReadChampBenchedByID(0,, 56) = 1) {
+		mTip("Couldn't find Havilar in [Q] formation. Check saved formations. Ending Gem Farm.")
+	;    Return, 1
+	}
+
+	mtip("champID Bly Slot " . ReadChampLvlByID(0,, 56) )
+
+	; mtip("current zone: " . ReadCurrentZone(0))
+Return
+
 
 >^NumpadSub:: ; hotkey (rightCTRL) + Numpad + - (minus) for quick reloads during development
 	Reload
 return
+
 
 subPause:
 	mTip("Script Paused")
 	Pause
 return
 
+
 subResume:
 	mTip("Script Resumed")
 	Pause, 0
 return
+
+
 
 ; hotkey Pause/Break OR Win+P.
 #P::
@@ -887,15 +1056,16 @@ Pause::
 	Pause
 return
 
+
 l::	; yes I did this, so that paying from steam streaming you can pause with "L"
-	if (aubsurdPauseKey = 1) {
+	; Make this configurable later with choose hotkey and INI settings.
+	if (absurdPauseKey = 1) {
 		Pause
 	} else {
 		send, l
 	}
 return
 
-;=::Pause  ; placeholder for an easy key during mobile remote desktop, or steam link play.
 
 
 Quit:
