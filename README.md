@@ -23,7 +23,7 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
 
 # Helpful tips
  - 	Use the PAUSE / BREAK key on your keyboard to pause the script.
- - 		example: If you set your rate to 1 second or turn on a clicking feature,
+  -	example: If you set your rate to 1 second or turn on a clicking feature,
  - 		you may have a hard time changing settings because the click / key spam is focuses back to IC
  - 	The script has a 3s delay for typing safety, if you have pressed a key (anywhere in your PC) recently, you may think the script did not fire
  - 		correct: it skipped the command and it will pick itself back up in the next loop (after 3s that is)
