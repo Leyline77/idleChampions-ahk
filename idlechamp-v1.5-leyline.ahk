@@ -4,7 +4,7 @@
 ; edited retaki
 ; credit to https://github.com/mikebaldi/Idle-Champions with courtesy permission to use
 ;
-; Current Version: 1.6.0
+; Current Version: 1.6.1
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
@@ -18,16 +18,23 @@
 ;		Works by sending key or mouse clicks to the game client window, it does not read or edit memory.
 ;		Developed and defaults for screen 1280x720
 ;
-;	Helpful tips:
-;	Use the PAUSE / BREAK key on your keyboard to pause the script.
-;		example: If you set your rate to 1 second or turn on a clicking feature,
-;		you may have a hard time changing settings because the click / key spam is focuses back to IC
-;	The script has a 3s delay for typing safety, if you have pressed a key (anywhere in your PC) recently, you may think the script did not fire
-;		correct: it skipped the command and it will pick itself back up in the next loop (after 3s that is)
-;	Increment Formations:
-;		if you want to restart the Increment Formations Timer you can reload the script.  (I will add a reset button later)
-;		you can "increment" the formations in any order by setting them to a lower Time than another.
-;		you can pick just one formation to increment by only setting a time for that formation.
+; # Helpful tips
+;  - Use the PAUSE / BREAK key on your keyboard to pause the script.
+;    - example: If you set your rate to 1 second or turn on a clicking feature,
+;    - you may have a hard time changing settings because the click / key spam is focuses back to IC
+;  - The script has a 3s delay for typing safety.
+;    - If you have pressed a key (anywhere in your PC) recently then you may think the script did not fire a keypress when it was supposed to
+;   	- You are correct: it skipped the keypress command and it will continue the next loop (after 3s of no key activity that is)
+;  - Increment Formations:
+;   	- If you want to restart the Increment Formations Timer - reload the script.  (I will add a reset button later)
+;   	- You can "increment" the formations in any order by setting them to a shorter time delay than another formation.
+;   	- You can pick just one formation to increment by only setting a time delay for that formation.
+;  - Repeat Formation:
+;   	- This is for one or more special missions where your party members are kicked out and you want to reload them (it was here when I adopted the script)
+;  -	Allow L Pause
+;   	-	This is a setting to allow pause/unpause of the script while remoting in from a limited mobile keyboard (steam link etc)
+;  -	Quick Settings
+;   		- These are Settings instilled by me for how I run my quick Gem Farm, I'm the dev, I get treats :)
 ;
 ;	1.5.0
 ;		started development off ot the 1.4e code base
@@ -85,7 +92,11 @@
 ; 			[Target] 	D:\Dropbox\_tools\AutoHotkey.v1.1.33.10\AutoHotkeyU64.exe idlechamp-v1.5-leyline.ahk
 ;			[Start In Directory] {the same as the script location} ie: D:\Dropbox\Games\IdleChampions\idleChampions-ahk\
 ;
-;	1.6.1 - Placeholder
+;	1.6.1 - Cleaned up a little few items, made a LevelUp multiple times function to reduce code and make clear intentions.
+;
+; 	Todo - Change Havilar imp loadup to detect level 15 after 1 click, and then after higher level reset toggle check variable
+;
+;	1.6.2 - Placeholder
 ;
 ; 	1.5.9+ - Todo - I think this was covered in 1.5.8 I will review
 ;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
@@ -245,7 +256,7 @@ makeGui() {
 
 	Gui, 1:Add, CheckBox, vAutoProgress gUpdateFromGUI Checked0, Auto Progress [ON] (every hour)
 
-	Gui, 1:Add, CheckBox, vloadHavilarImp gUpdateFromGUI Checked0, Load Havilar Imp
+	Gui, 1:Add, CheckBox, vloadHavilarImp gUpdateFromGUI Checked0, Load Havilar Imp on Reset
 
 	Gui, 1:Add, CheckBox, w180 vLevelUpOnReset gUpdateFromGUI Checked0, Quick Level Ups on Reset
 
@@ -638,7 +649,7 @@ doLevelUpOnReset:
 
 		if ( C10 = 1 OR loadHavilarImp = 1 ) {
 			mTip("Load Havilar")
-			DirectedInput("{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}{F10}")
+			doLeveUps("{F10}", 24)
 
 			if (loadHavilarImp = 1) {
 				sleep 250
@@ -650,18 +661,23 @@ doLevelUpOnReset:
 		mTip("Load Group")
 
 		if ( C1 = 1 ) {
-			DirectedInput("{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}{F1}")
+			doLeveUps("{F1}", 26)
+			DirectedInput("")
 		}
 		if ( C6 = 1 ) {
-			DirectedInput("{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}{F6}")
+			doLeveUps("{F6}", 18)
 		}
 		if ( C8 = 1 ) {
-			DirectedInput("{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}{F8}")
+			doLeveUps("{F8}", 20)
+		}
+		if ( C12 = 1 ) {
+			doLeveUps("{F12}", 15)
 		}
 		if ( C4 = 1 ) {
-			DirectedInput("{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}{F4}")
+			doLeveUps("{F4}", 15)
 		}
 		if ( ClickDmg = 1 ) {
+			DirectedInput("{Ctrl down}``{Ctrl up}")
 			DirectedInput("{Ctrl down}``{Ctrl up}")
 		}
 
@@ -762,6 +778,9 @@ SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
 	gosub SetAllUlt
 	gosub UnsetAllHeroLevel
 
+	OpenProcess() ; this is also here incase the game client restarted and we need new memory pointers.
+	ModuleBaseAddress() ; this is also here incase the game client restarted and we need new memory pointers.
+
 	GuiControl, 1:, U1, 0 ; Deekin off
 	GuiControl, 1:, U5, 0 ; Havilar off
 
@@ -769,6 +788,8 @@ SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
 	GuiControl, 1:, C4, 1
 	GuiControl, 1:, C6, 1
 	GuiControl, 1:, C8, 1
+	GuiControl, 1:, C10, 1
+	GuiControl, 1:, C12, 1
 
 	GuiControl, 1:, loadHavilarImp, 1
 
@@ -776,8 +797,8 @@ SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
 
 	GuiControl, 1:, AutoUltimates, 1
 
-	; LevelingRate := 1
-	; GuiControl, 1:ChooseString, LevelingRate, 1
+	LevelingRate := 1
+	GuiControl, 1:ChooseString, LevelingRate, 1
 
 	SkipBossAnimation := 1
 	GuiControl, 1:, SkipBossAnimation, 1
@@ -789,6 +810,8 @@ SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
 	Gui, 1:Submit, NoHide
 
 	gCheckRestartLevelOne := 1
+
+
 
 	gosub UpdateFromGUI ; start clicking
 
@@ -858,6 +881,21 @@ SetAllUlt:
 	Gui, 1:Submit, NoHide
 return
 
+
+doLeveUps(levelKeyString := "", numLevels := 1) {
+	sendString := ""
+	x := 0
+	while (x < numLevels) {
+		x++
+		sendString := sendString levelKeyString
+	}
+
+	if (sendString <> "") {
+		DirectedInput(sendString)
+	}
+
+	Return
+}
 
 IsGameActive() {
 	WinGetTitle, title, A ; fetch the title of the active windo
@@ -1018,16 +1056,22 @@ Return
 	if (ReadChampBenchedByID(0,, 58) = 1) {
 		mTip("Couldn't find Briv in [Q] formation. Check saved formations. Ending Gem Farm.")
 	;    Return, 1
+		;sleep 2000
 	}
 
 	if (ReadChampBenchedByID(0,, 56) = 1) {
 		mTip("Couldn't find Havilar in [Q] formation. Check saved formations. Ending Gem Farm.")
 	;    Return, 1
+		;sleep 2000
 	}
 
 	mtip("champID Bly Slot " . ReadChampLvlByID(0,, 56) )
+	;sleep 2000
+	mtip("current zone: " . ReadCurrentZone(0))
+	sleep 3000
 
-	; mtip("current zone: " . ReadCurrentZone(0))
+	doLeveUps("{F1}", 5)
+
 Return
 
 
