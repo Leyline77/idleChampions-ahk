@@ -4,7 +4,7 @@
 ; edited retaki
 ; credit to https://github.com/mikebaldi/Idle-Champions with courtesy permission to use
 ;
-; Current Version: 1.6.1
+; Current Version: 1.6.2
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
@@ -96,7 +96,9 @@
 ;
 ; 	Todo - Change Havilar imp loadup to detect level 15 after 1 click, and then after higher level reset toggle check variable
 ;
-;	1.6.2 - Placeholder
+;	1.6.2 - Fixed CTRL levelups on click damage on quick levelup.
+;
+;	1.6.3 - Placeholder
 ;
 ; 	1.5.9+ - Todo - I think this was covered in 1.5.8 I will review
 ;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
@@ -638,17 +640,22 @@ doLevelUpOnReset:
 	; Hack for now until I can make it more graceful,   Set Havi Ultimate
 	if (gCheckRestartLevelOne = 0 AND gLevel_Number > 1) {
 		; set this up so that we will load group one time next load.
-		mTip("Toggle Level Watch")
+		mTip("Watching for restart level 1")
 		gCheckRestartLevelOne := 1
 	} else if (gLevel_Number = 1 and gCheckRestartLevelOne = 1) {
 		gCheckRestartLevelOne := 0
 
-		SetKeyDelay 20,20
+		SetKeyDelay 20,40
 		mTip("Level 1 restart Detected, Leveling Group in 5s")
 		sleep 5000
 
 		if ( C10 = 1 OR loadHavilarImp = 1 ) {
 			mTip("Load Havilar")
+
+			; why does this not load her imp automatically?
+			;DirectedInput("{Alt down}{Shift down}{F10}{Alt up}{Shift up}")
+			;DirectedInput("{Alt down}{Shift down}{F10}{Alt up}{Shift up}")
+
 			doLeveUps("{F10}", 24)
 
 			if (loadHavilarImp = 1) {
@@ -677,8 +684,10 @@ doLevelUpOnReset:
 			doLeveUps("{F4}", 15)
 		}
 		if ( ClickDmg = 1 ) {
-			DirectedInput("{Ctrl down}``{Ctrl up}")
-			DirectedInput("{Ctrl down}``{Ctrl up}")
+			mTip("Click Damage x100 x2")
+			DirectedInput("{LCtrl down}``{LCtrl up}")
+			DirectedInput("{LCtrl down}``{LCtrl up}")
+			sleep 500
 		}
 
 		SetKeyDelay -1,-1
@@ -702,6 +711,9 @@ HeroLevel:
 	}
 	if ( C10 = 1 ) {
 		SendControlKey("F10")
+		;SetKeyDelay 40,40
+		;DirectedInput("{shift down}{alt down}{F10}{alt up}{shift up}")
+		;SetKeyDelay -1,-1
 	}
 	if ( C9 = 1 ) {
 		SendControlKey("F9")
@@ -1035,20 +1047,41 @@ ControlClick2_original(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeTe
 	PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP
 }
 
+ReleaseStuckKeys() {
+    if GetKeyState("Alt") && !GetKeyState("Alt", "P")
+        Send {Alt up}
+    if GetKeyState("Shift") && !GetKeyState("Shift", "P")
+        Send {Shift up}
+    if GetKeyState("Control") && !GetKeyState("Control", "P")
+        Send {Control up}
+    return
+}
+
 ;Esc::
 	;ExitApp
 ;return
 
 ; CoordMode, mouse, screen ; does NOT use active window coords
 ^numpad7:: ; hotkey
+	KeyWait, ctrl    ; Waits for the ctrl key to be released before continuing the script.
 	SetTimer, doClickTest, off
 Return
 ^numpad8:: ; hotkey
+	KeyWait, ctrl    ; Waits for the ctrl key to be released before continuing the script.
 	SetTimer, doClickTest, 60
 Return
 
+; numpad9:: ; hotkey
+; 	SetKeyDelay 20,40
+; 	DirectedInput("{LCtrl down}``{LCtrl up}")
+; 	; DirectedInput("{LCtrl down}{F10}{F10}{LCtrl up}")
+; 	sleep 25
+; 	SetKeyDelay -1,-1
+; Return
+
 ^numpad9:: ; hotkey
 	; This is my debug testing area, move along.
+	KeyWait, ctrl    ; Waits for the ctrl key to be released before continuing the script.
 	; OpenProcess()
 	; ModuleBaseAddress()
 	; gCheckRestartLevelOne := 1
@@ -1071,11 +1104,11 @@ Return
 	sleep 3000
 
 	doLeveUps("{F1}", 5)
-
 Return
 
 
 >^NumpadSub:: ; hotkey (rightCTRL) + Numpad + - (minus) for quick reloads during development
+	KeyWait, ctrl    ; Waits for the ctrl key to be released before continuing the script.
 	Reload
 return
 
