@@ -4,7 +4,7 @@
 ; edited retaki
 ; credit to https://github.com/mikebaldi/Idle-Champions with courtesy permission to use
 ;
-; Current Version: 1.6.2
+; Current Version: 1.6.3 - 2021-11-12
 ;
 ; edited Leyline (Discord: Swamp Fox II) 2021-09-23
 ;	https://github.com/Leyline77/idleChampions-ahk
@@ -56,7 +56,7 @@
 ;		in commit changes in commit message (remove controlclick2, remove killdistractions (temp))
 ;	1.5.4
 ;		Removed second key send from the function that was firing a second keystroke if the keys had not been used in 30s.
-;		This old code had been causing issues with double levelling, and also hindering AutoProgress
+;		This old code had been causing issues with double leveling, and also hindering AutoProgress
 ;		TIP: skip boss animations is just press right, this will hinder the auto progress theory*
 ;			*The auto progress theory - if your party wipes, they fall back to a stable area, on the next hour turn autoprogress back on to see if they can push
 ;	1.5.5
@@ -98,7 +98,11 @@
 ;
 ;	1.6.2 - Fixed CTRL levelups on click damage on quick levelup.
 ;
-;	1.6.3 - Placeholder
+;	1.6.3 - Updated Havilar Load imps and quick levellup, hit Q formation to set correct bench champs before level up.
+;		Started development on saving settings to JSON
+;		Started development on Reset game for farming / core < level 3
+;
+;	1.6.4 - Placeholder
 ;
 ; 	1.5.9+ - Todo - I think this was covered in 1.5.8 I will review
 ;		Add game_exe to all methods that are currently only useing game_title so that we can add steam/epic toggle
@@ -147,8 +151,9 @@ if (_ClassMemory.__Class != "_ClassMemory") {
 ;server call functions and variables Included after GUI so chest tabs maybe non optimal way of doing it
 #include IC_ServerCallFunctions.ahk
 
+;general functions
+#include IC_GeneralFunctions.ahk
 
-GroupAdd, myGroup , %game_title% ; game_Title
 
 #SingleInstance force
 #IfWinExist ahk_group myGroup
@@ -157,6 +162,9 @@ GroupAdd, myGroup , %game_title% ; game_Title
 CoordMode, Mouse, Client
 setmousedelay -1
 setbatchlines -1
+GroupAdd, myGroup , %game_title% ; game_Title
+
+
 
 ;global PBS_SMOOTH            := 0x00000001
 
@@ -171,6 +179,33 @@ global gCheckRestartLevelOne := 0
 
 global loadHavilarImp:=0
 
+global UserSettings := {}
+UserSettings := LoadObjectFromJSON("idleChamp-leyline.JSON")
+
+
+; move this to a loadsettings function
+if (!IsObject(UserSettings)) {
+	MsgBox, User settings missing using defaults. ;, change or View Install path before doing anything else.
+	UserSettings := {}
+	UserSettings["TargetZone"] := 230
+	UserSettings["ResetTime"] := 60
+	UserSettings["InstallPath"] := "C:\Program Files (x86)\Steam\steamapps\common\IdleChampions\"
+} else {
+	if (!UserSettings["TargetZone"]) {
+		MsgBox, Reset adventure after this zone setting failed to load, starting script with default.
+		UserSettings["TargetZone"] := 30
+	}
+	if (!UserSettings["InstallPath"]) {
+		MsgBox, Install path setting failed to load, starting script with default.
+		UserSettings["InstallPath"] := "C:\Program Files (x86)\Steam\steamapps\common\IdleChampions\"
+	}
+	if (!UserSettings["ResetTime"]) {
+		MsgBox, Reset if unable to progress after this much time failed to load, starting script with default.
+		UserSettings["ResetTime"] := 60
+	}
+}
+
+
 OpenProcess()
 ModuleBaseAddress()
 
@@ -178,6 +213,11 @@ makeGui()
 
 ;end of main code area
 return
+
+Save_Settings() {
+	WriteObjectToJSON("idleChamp-leyline.JSON", UserSettings)
+	return
+}
 
 makeGui() {
 
@@ -309,6 +349,9 @@ makeGui() {
 	Gui, 1:Add, Text,, Pause script with: `n [Win+P] `n [Pause/Break]`n
 
 	Gui, 1:Add, CheckBox, vabsurdPauseKey gUpdateFromGUI Checked0, Allow L pause
+
+	Gui, 1:Add, Button, w100 y+6 gSave_Settings, Save Settings
+
 
 	Gui, 1:Show
 
@@ -471,13 +514,13 @@ return
 
 mTip(msg) {
 	toolTip, %msg%
-	setTimer clearToolTip, 5000
+	setTimer, clearToolTip, 5000
 }
 
 
 clearToolTip:
 	ToolTip
-	setTimer clearToolTip, off
+	setTimer, clearToolTip, off
 return
 
 checkMasterTicks:
@@ -551,7 +594,7 @@ checkMasterTicks:
 		IncrementFormations := 0
 		GuiControl, 1:, IncrementFormations, 0
 		Gui, 1:Submit, NoHide
-		SetTimer checkMasterTicks, off
+		SetTimer, checkMasterTicks, off
 	}
 return
 
@@ -565,10 +608,10 @@ doIncrementFormation:
 	}
 
 	if (IncrementFormations = 1) {
-		SetTimer checkMasterTicks, 500
+		SetTimer, checkMasterTicks, 500
 	} else {
 		mTip("I will NOT increment the formations every x hour(s).")
-		SetTimer checkMasterTicks, off
+		SetTimer, checkMasterTicks, off
 	}
 
 return
@@ -633,7 +676,106 @@ doUltimates:
 return
 
 
+doResetGame:
+
+	OpenProcess()
+	ModuleBaseAddress()
+
+	gLevel_Number := ReadCurrentZone(1)
+	advtoload := ReadCurrentObjID(0)
+
+	mTip("Command to reset on : gLevel_Number " . gLevel_Number)
+	sleep 2000
+
+
+	if (advtoload < 1) {
+		;MsgBox, Please load into a valid adventure and restart. Ending Gem Farm restarts.
+		;return
+	}
+
+	UserID := ReadUserID(0)
+	UserHash := ReadUserHash(0)
+
+	; if (UserID == "") {
+	; 	MsgBox, Failed to read user ID, check memory function file is up to date. Ending script.
+	; 	Return
+	; }
+
+
+	; mTip("UserID " . UserID . " user hash " . UserHash)
+
+	; true OR ElapsedTime > UserSettings["ResetTime"] OR
+
+	if (gLevel_Number > UserSettings["TargetZone"]) {
+		mTip("Resetting Game")
+		EndAdventureNew()
+
+		sleep 2000
+
+		CloseIC()
+
+		mTip("onworldmap? " . IsOnWorldMap())
+		sleep 2000
+
+		if ( IsOnWorldMap() ) {
+			; ServerCall.callLoadAdventure( advtoload )
+
+			LoadAdventure()
+			; var := ServerCall.getVersion()
+			; GuiControl, MyWindow:, ServerCallVersionID, Servercall Function File Version: %var%
+		}
+		; SafetyCheck()
+		mTip("Restarting IC")
+		sleep 2000
+		LoadIC()
+
+		sleep 2000
+		OpenProcess()
+		ModuleBaseAddress()
+
+	}
+return
+
+
+IsOnWorldMap() {
+	; if ( this.userData.getCurrentAdventure() == -1 ) {
+	if ( GetUserDetails() == -1 ) {
+		return 1
+	} else {
+		return 0
+	 }
+}
+
+
+EndAdventureNew() {
+	; This is the version from the Briv Script, (as opposed to the vbersion in IC_GeneralFunctions from IC_gemfarm)
+	DirectedInput("r")
+	xClick := (ReadScreenWidth(1) / 2) - 80
+	yClickMax := ReadScreenHeight(1)
+	yClick := yClickMax / 2
+	StartTime := A_TickCount
+	ElapsedTime := 0
+	; GuiControl, MyWindow:, gloopID, Manually Ending Adventure
+	mTip("Manually Ending Adventure")
+	while(!ReadResettting(1) AND ElapsedTime < 30000)
+	{
+		WinActivate, ahk_exe IdleDragons.exe
+		MouseClick, Left, xClick, yClick, 1
+		if (yClick < yClickMax) {
+			yClick := yClick + 10
+		} else {
+			yClick := yClickMax / 2
+		}
+
+		Sleep, 25
+		ElapsedTime := UpdateElapsedTime(StartTime)
+		;UpdateStatTimers()
+	}
+}
+
+
 doLevelUpOnReset:
+
 
 	gLevel_Number := ReadCurrentZone(1)
 
@@ -645,9 +787,16 @@ doLevelUpOnReset:
 	} else if (gLevel_Number = 1 and gCheckRestartLevelOne = 1) {
 		gCheckRestartLevelOne := 0
 
+		SetTimer, HeroLevel, Off ; turn the click leveling off until we are done to preserve Havilar Imps.
+		SetTimer, doUltimates, Off ; turn the ultimates off until we are done to preserve Havilar Imps.
+
 		SetKeyDelay 20,40
 		mTip("Level 1 restart Detected, Leveling Group in 5s")
 		sleep 5000
+
+		; start the formation so the right champs are on the bench.
+		SendControlKey("q")
+		sleep 250
 
 		if ( C10 = 1 OR loadHavilarImp = 1 ) {
 			mTip("Load Havilar")
@@ -690,7 +839,37 @@ doLevelUpOnReset:
 			sleep 500
 		}
 
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+		Gosub, HeroLevel
+
+		SendControlKey("q")
+		sleep 250
+		SendControlKey("q")
+		sleep 250
+
 		SetKeyDelay -1,-1
+
+		mTip("Resuming normal click settings in 5s")
+		sleep 5000
+		gosub UpdateFromGUI ; restart normal functions
 	}
 
 return
@@ -794,12 +973,15 @@ SetAllHeroLevel_GemFarm: ; Leyline Custom GemFarm
 	ModuleBaseAddress() ; this is also here incase the game client restarted and we need new memory pointers.
 
 	GuiControl, 1:, U1, 0 ; Deekin off
-	GuiControl, 1:, U5, 0 ; Havilar off
+	GuiControl, 1:, U8, 0 ; Havilar off
 
 	GuiControl, 1:, C1, 1
+	GuiControl, 1:, C2, 1
 	GuiControl, 1:, C4, 1
 	GuiControl, 1:, C6, 1
+	GuiControl, 1:, C7, 1
 	GuiControl, 1:, C8, 1
+	GuiControl, 1:, C9, 1
 	GuiControl, 1:, C10, 1
 	GuiControl, 1:, C12, 1
 
@@ -973,12 +1155,14 @@ ControlFromPoint(X, Y, WinTitle="", WinText="", ByRef cX="", ByRef cY="", Exclud
 
 ; Ported from AutoHotkey::script2.cpp::EnumChildFindPoint()
 EnumChildFindPoint(aWnd, lParam) {
-	if !DllCall("IsWindowVisible","uint",aWnd)
-	return true
+	if !DllCall("IsWindowVisible","uint",aWnd) {
+		return true
+	}
 
 	VarSetCapacity(rect, 16)
-	if !DllCall("GetWindowRect","uint",aWnd,"uint",&rect)
-	return true
+	if !DllCall("GetWindowRect","uint",aWnd,"uint",&rect) {
+		return true
+	}
 
 	pt_x:=NumGet(lParam+0,0,"int"), pt_y:=NumGet(lParam+0,4,"int")
 	rect_left:=NumGet(rect,0,"int"), rect_right:=NumGet(rect,8,"int")
@@ -1047,15 +1231,46 @@ ControlClick2_original(X, Y, WinTitle="", WinText="", ExcludeTitle="", ExcludeTe
 	PostMessage, 0x202, 0, cX&0xFFFF | cY<<16,, ahk_id %hwnd% ; WM_LBUTTONUP
 }
 
+
 ReleaseStuckKeys() {
-    if GetKeyState("Alt") && !GetKeyState("Alt", "P")
-        Send {Alt up}
-    if GetKeyState("Shift") && !GetKeyState("Shift", "P")
-        Send {Shift up}
-    if GetKeyState("Control") && !GetKeyState("Control", "P")
-        Send {Control up}
-    return
+	if GetKeyState("Alt") && !GetKeyState("Alt", "P") {
+		Send {Alt up}
+	}
+	if GetKeyState("Shift") && !GetKeyState("Shift", "P") {
+		Send {Shift up}
+	}
+	if GetKeyState("Control") && !GetKeyState("Control", "P") {
+		Send {Control up}
+	}
+	return
 }
+
+
+LoadIC() {
+	;GuiControl, MyWindow:, LoopID, Safety Check.
+	while (SafetyCheck(UserSettings["InstallPath"])) {
+		mTip("Loading Game")
+		; GuiControl, MyWindow:, LoopID, Loading Game
+		if (!GameLoaded()) {
+			; GuiControl, MyWindow:, LoopID, Failed to load game, restarting.
+			mtip("Failed to load game, restarting.")
+			CloseIC()
+		}
+	}
+}
+
+
+subPause:
+	mTip("Script Paused")
+	Pause
+return
+
+subResume:
+	mTip("Script Resumed")
+	Pause, 0
+return
+
+
 
 ;Esc::
 	;ExitApp
@@ -1106,24 +1321,14 @@ Return
 	doLeveUps("{F1}", 5)
 Return
 
+>^numpad4:: ; hotkey
+	goSub doResetGame
+return
 
 >^NumpadSub:: ; hotkey (rightCTRL) + Numpad + - (minus) for quick reloads during development
 	KeyWait, ctrl    ; Waits for the ctrl key to be released before continuing the script.
 	Reload
 return
-
-
-subPause:
-	mTip("Script Paused")
-	Pause
-return
-
-
-subResume:
-	mTip("Script Resumed")
-	Pause, 0
-return
-
 
 
 ; hotkey Pause/Break OR Win+P.
@@ -1147,4 +1352,3 @@ return
 
 Quit:
 ExitApp
-
