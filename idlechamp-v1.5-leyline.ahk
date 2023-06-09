@@ -170,14 +170,14 @@ GroupAdd, myGroup , %game_title% ; game_Title
 
 global initialTick := 0
 global IdleTime := 0
-global vFormationChecks := 0
-
+global FormationChecks := 0
+global MonitorReloadGame := 1
 
 global absurdPauseKey := 0
 
 global gCheckRestartLevelOne := 0
 
-global loadHavilarImp:=0
+global loadHavilarImp := 0
 
 global UserSettings := {}
 UserSettings := LoadObjectFromJSON("idleChamp-leyline.JSON")
@@ -236,7 +236,7 @@ makeGui() {
 	Gui, 1:Add, CheckBox, vClickDmg gUpdateFromGUI Checked, Click
 
 	Gui, 1:Add, Text, w50 xs ys+150, Rate (seconds):
-	Gui, 1:Add, DropDownList, w50 vLevelingRate gUpdateFromGUI, 1|5||10|15|30|60
+	Gui, 1:Add, DropDownList, w50 vLevelingRate gUpdateFromGUI, 1||5|10|15|30|60
 
 	Gui, 1:Add, Button, w50 y+6 gUnsetAllHeroLevel, Clear All
 
@@ -267,7 +267,7 @@ makeGui() {
 	Gui, 1:Add, CheckBox, vU5 gUpdateFromGUI Checked, Ult 5
 
 	Gui, 1:Add, Text, w50 xs ys+150, Rate (seconds):
-	Gui, 1:Add, DropDownList, w50 vUltRate gUpdateFromGUI, 1|5||10|15|30|60|300
+	Gui, 1:Add, DropDownList, w50 vUltRate gUpdateFromGUI, 1||5|10|15|30|60|300
 
 	Gui, 1:Add, Button, w50 y+6 gUnsetAllUlt, Clear All
 
@@ -286,7 +286,7 @@ makeGui() {
 	Gui, 1:Add, CheckBox, xp+10 vRepeatFormation gUpdateFromGUI Checked0, Repeat Formation
 
 	Gui, 1:Add, Text, Section , Formation:
-	Gui, 1:Add, DropDownList, vRepeatFormationSelect gUpdateFromGUI, 1||2|3
+	Gui, 1:Add, DropDownList, vRepeatFormationSelect gUpdateFromGUI, 1||2|3|4
 	Gui, 1:Add, Text, , Rate (Seconds):
 	Gui, 1:Add, DropDownList, vRepeatFormationRate gUpdateFromGUI, 1|5||10|15|30|60|120
 
@@ -350,6 +350,8 @@ makeGui() {
 
 	Gui, 1:Add, CheckBox, vabsurdPauseKey gUpdateFromGUI Checked0, Allow L pause
 
+	Gui, 1:Add, CheckBox, vMonitorReloadGame gUpdateFromGUI Checked1, Reload Game
+
 	Gui, 1:Add, Button, w100 y+6 gSave_Settings, Save Settings
 
 
@@ -398,7 +400,7 @@ UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
 
 	if ( RepeatFormation = 1 ) {
 		RepeatFormationTime := (1000 * RepeatFormationRate)
-		mTip("doAutoFormation %RepeatFormationRate% - %RepeatFormationTime%")
+		mTip("doAutoFormation " . RepeatFormationSelect . "-" . RepeatFormationRate . "-" . RepeatFormationTime)
 		SetTimer, doRepeatFormation, %RepeatFormationTime%
 	} else {
 		SetTimer, doRepeatFormation, Off
@@ -428,7 +430,12 @@ UpdateFromGUI: ; do the work based on GUI controls calling this subroutine
 		SetTimer, doAutoClicker, Off
 	}
 
-
+	if ( MonitorReloadGame = 1 ) {
+		mTip("MonitorReloadGame")
+		SetTimer, doReloadGame, 60000
+	} else {
+		SetTimer, doReloadGame, Off
+	}
 
 	; if (IncrementFormations = 1 AND (IncrementFormationRateQ > 0 or IncrementFormationRateW > 0 or IncrementFormationRateE > 0) ){
 	;   gosub doIncrementFormation
@@ -509,6 +516,16 @@ doRepeatFormation:
 	if ( RepeatFormationSelect = 3 ) {
 		SendControlKey("e")
 	}
+
+	if ( RepeatFormationSelect = 4 ) {
+		mtip("e")
+		SendControlKey("e")
+		sleep 1000
+		mtip("q")
+		SendControlKey("q")
+		sleep 1000
+	}
+
 return
 
 
@@ -1097,6 +1114,12 @@ IsGameActive() {
 }
 
 
+doReloadGame() {
+	LoadIC()
+return
+
+}
+
 GetGameAhkId() {
 	return WinExist("ahk_exe" . game_Exe)
 }
@@ -1245,6 +1268,15 @@ ReleaseStuckKeys() {
 	return
 }
 
+gameLoadedX() {
+
+ if (Not WinExist( "ahk_exe IdleDragons.exe" )) {
+              gameLoaded := false
+            } else if (!gameLoaded) {
+                ; this.Memory.OpenProcessReader()
+                gameLoaded := true
+          }
+}
 
 LoadIC() {
 	;GuiControl, MyWindow:, LoopID, Safety Check.
