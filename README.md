@@ -40,3 +40,6 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
   	-	This is a setting to allow pause/unpause of the script while remoting in from a limited mobile keyboard (steam link etc)
  -	Quick Settings
   		- These are Settings instilled by me for how I run my quick Gem Farm, I'm the dev, I get treats :)
+
+
+   ![Alt text](/UI_sample.png?raw=true "UI Screenshot")
