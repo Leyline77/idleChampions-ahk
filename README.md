@@ -42,4 +42,4 @@ Idle Champions of the Forgotten Realms AHK Macro Scripts
   		- These are Settings instilled by me for how I run my quick Gem Farm, I'm the dev, I get treats :)
 
 
-   ![Alt text](/blob/main/UI_sample.png?raw=true "UI Screenshot")
+   ![Alt text](UI-sample.png?raw=true "UI Screenshot")
